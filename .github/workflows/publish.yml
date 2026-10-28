@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e
       - run: uv build
       - uses: actions/upload-artifact@v7
         with: { name: dist, path: dist/ }
@@ -20,6 +20,6 @@ jobs:
     steps:
       - uses: actions/download-artifact@v8
         with: { name: dist, path: dist/ }
-      - uses: astral-sh/setup-uv@v10
-      - uses: astral-sh/attest-action@v0
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e
+      - uses: astral-sh/attest-action@39b6ce43875c196a579e31635b11aa2a2036384a
       - run: uv publish --trusted-publishing always
