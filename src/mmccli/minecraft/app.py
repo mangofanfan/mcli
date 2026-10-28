@@ -1,11 +1,11 @@
-# mcli.minecraft.app
+# mmccli.minecraft.app
 
 from typing import Annotated, Literal
 
 import typer
 from rich.table import Table
 
-from mcli.log import err, info, raw
+from mmccli.log import err, info, raw
 
 from .manifests import load_mc_manifest_v2, load_mc_manifest_v2_from_cache
 

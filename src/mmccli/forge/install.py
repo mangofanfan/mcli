@@ -1,8 +1,8 @@
-# mcli.forge.install
+# mmccli.forge.install
 from rich.live import Live
 
-from mcli.forge.model import ForgeInstallerVersionJson
-from mcli.log import console, out, useGlobalState, warn
+from mmccli.forge.model import ForgeInstallerVersionJson
+from mmccli.log import console, out, useGlobalState, warn
 
 
 def install_forge_silently(forge_installer_path: str, minecraft_path: str):
@@ -10,7 +10,7 @@ def install_forge_silently(forge_installer_path: str, minecraft_path: str):
     import subprocess
     from importlib import resources
 
-    forge_install_tool_path = resources.files("mcli").joinpath("bin/forge-install-bootstrapper.jar")
+    forge_install_tool_path = resources.files("mmccli").joinpath("bin/forge-install-bootstrapper.jar")
 
     command = " ".join(
         [

@@ -1,4 +1,4 @@
-# mcli.minecraft.add
+# mmccli.minecraft.add
 import json
 import os
 import ssl
@@ -12,17 +12,17 @@ from pypdl import Pypdl
 from pypdl.utils import EFuture, FileValidator
 from rich.progress import Progress
 
-from mcli.cache import (
+from mmccli.cache import (
     get_assets_cache_file_path,
     get_forge_installer_cache_file_path,
     get_library_cache_file_path,
     get_version_jar_cache_file_path,
     link_or_move,
 )
-from mcli.forge import ForgeInstallerVersionInfo
-from mcli.forge.model import ForgeInstallerInstallProfileJson, ForgeInstallerVersionJson
-from mcli.log import RequestStatusError, console, out, warn
-from mcli.minecraft import (
+from mmccli.forge import ForgeInstallerVersionInfo
+from mmccli.forge.model import ForgeInstallerInstallProfileJson, ForgeInstallerVersionJson
+from mmccli.log import RequestStatusError, console, out, warn
+from mmccli.minecraft import (
     McGameAssetIndexJson,
     McGameVersionJson,
     McGameVersionJson_FileModel,

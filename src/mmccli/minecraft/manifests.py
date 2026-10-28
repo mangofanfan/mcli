@@ -1,12 +1,12 @@
-# mcli.minecraft.manifests
+# mmccli.minecraft.manifests
 import json
 import os
 
 import requests
 
-from mcli.cache import CACHE_ROOT_DIR
-from mcli.log import out, warn
-from mcli.log.error import RequestStatusError
+from mmccli.cache import CACHE_ROOT_DIR
+from mmccli.log import out, warn
+from mmccli.log.error import RequestStatusError
 from .model import McGameVersionManifestV2
 
 CACHE_DIR = CACHE_ROOT_DIR / "manifest"

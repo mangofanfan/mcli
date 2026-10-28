@@ -2,8 +2,8 @@ import os
 
 import requests
 
-from mcli.cache import CACHE_ROOT_DIR
-from mcli.log import RequestStatusError, out
+from mmccli.cache import CACHE_ROOT_DIR
+from mmccli.log import RequestStatusError, out
 
 from .model import FabricMetaVersions, FabricMetaVersions_LoaderItem
 

@@ -1,9 +1,9 @@
-# mcli.forge.model
+# mmccli.forge.model
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, RootModel, model_validator
 
-from mcli.minecraft import McGameVersionJson_Arguments, McGameVersionJson_LibrariesItem
+from mmccli.minecraft import McGameVersionJson_Arguments, McGameVersionJson_LibrariesItem
 
 
 class ForgeInstallerVersionJson(BaseModel):
@@ -99,6 +99,7 @@ class ForgeVersionItem_FilesItem(BaseModel):
 
 class ForgeInstallerVersionInfo(BaseModel):
     """MCLI 使用"""
+
     id: str  # 安装器版本的人类可读模式，例如 62.0.1
     name: str  # 安装器的人类可读名称，例如 forge-installer-26.1-62.0.1.jar
     build: int

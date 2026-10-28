@@ -1,12 +1,12 @@
-# mcli.forge.promos
+# mmccli.forge.promos
 import json
 import os
 from typing import Literal
 
 import requests
 
-from mcli.cache import CACHE_ROOT_DIR
-from mcli.log import RequestStatusError, out, warn
+from mmccli.cache import CACHE_ROOT_DIR
+from mmccli.log import RequestStatusError, out, warn
 
 from .model import (
     ForgeInstallerVersionInfo,

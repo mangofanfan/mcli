@@ -1,4 +1,4 @@
-# mcli.cache
+# mmccli.cache
 
 from ._lib import (
     CACHE_ROOT_DIR,

@@ -1,7 +1,7 @@
-# mcli.path_dector
+# mmccli.path_dector
 from pathlib import Path
 
-from mcli.log import err, useGlobalState
+from mmccli.log import err, useGlobalState
 
 
 def detect_minecraft_install_folder() -> bool:

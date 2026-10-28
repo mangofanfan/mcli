@@ -1,8 +1,8 @@
-# mcli.fabric.install
+# mmccli.fabric.install
 import os
 
-from mcli.fabric.model import FabricMetaVersions_LoaderItem_LauncherMeta_MainClass
-from mcli.minecraft import (
+from mmccli.fabric.model import FabricMetaVersions_LoaderItem_LauncherMeta_MainClass
+from mmccli.minecraft import (
     McGameVersionJson,
     McGameVersionJson_LibrariesItem,
     McGameVersionJson_LibrariesItemDownloads,

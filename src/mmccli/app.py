@@ -1,8 +1,8 @@
-# mcli.app
+# mmccli.app
 from dotenv import load_dotenv
 
-from mcli.forge import rename_forge_version
-from mcli.path_dector import detect_minecraft_install_folder
+from mmccli.forge import rename_forge_version
+from mmccli.path_dector import detect_minecraft_install_folder
 
 load_dotenv()
 
@@ -11,8 +11,8 @@ from typing import Annotated
 
 import typer
 
-from mcli.log import err, info, out, useGlobalState, warn
-from mcli.minecraft import app_minecraft, load_mc_version_from_cache
+from mmccli.log import err, info, out, useGlobalState, warn
+from mmccli.minecraft import app_minecraft, load_mc_version_from_cache
 
 app = typer.Typer(help="Minecraft Java Cli", name="MCLI")
 app.add_typer(app_minecraft)
@@ -30,7 +30,7 @@ def login():
     err("正版登录尚不可用，因为 Mojang 没有批准 MCLI 访问其游戏服务 API。")
     raise typer.Exit(code=100)
 
-    from mcli.ms_oauth import (
+    from mmccli.ms_oauth import (
         login_for_minecraft_with_xsts,
         login_for_xbox_live,
         login_for_xsts,
@@ -93,7 +93,7 @@ def add(
         raise typer.Exit(code=404)
 
     if forge_version_promo_or_id:
-        from mcli.forge import load_forge_version_from_cache
+        from mmccli.forge import load_forge_version_from_cache
 
         info("正在查找 Forge 版本信息……")
         forge_version_info = load_forge_version_from_cache(mc_version.id, forge_version_promo_or_id, True)
@@ -103,7 +103,7 @@ def add(
         info(f"已确认 Forge 版本 {forge_version_info.name}")
 
     if fabric_version_promo_or_id:
-        from mcli.fabric import load_fabric_versions
+        from mmccli.fabric import load_fabric_versions
 
         info("正在查找 Fabric 版本信息……")
         fabric_version_info = load_fabric_versions(mc_version.id, fabric_version_promo_or_id)
@@ -117,7 +117,7 @@ def add(
         if fabric_version_info:
             name += "-fabric-" + fabric_version_info.loader.version
 
-    from mcli.add import (
+    from mmccli.add import (
         analysis_forge_installer_version_json,
         download_assets,
         download_forge_installer_jar,
@@ -170,7 +170,7 @@ def add(
         download_libraries(forge_version_json.libraries + forge_install_profile_json.libraries, dl, "forge")
         info("Forge 库文件下载完成，开始安装 Forge……")
 
-        from mcli.forge import install_forge_silently
+        from mmccli.forge import install_forge_silently
 
         if install_forge_silently(str(forge_installer_path), str(useGlobalState.MINECRAFT)):
             rename_forge_version(vanilla_mc_version_id, forge_version_info.id, name)
@@ -179,7 +179,7 @@ def add(
             warn(f"{forge_version_info.name} 安装失败，但游戏本体应当安装成功。")
 
     if fabric_version_info:
-        from mcli.fabric import build_version_json_libraries_item, update_mc_version_json_with_fabric
+        from mmccli.fabric import build_version_json_libraries_item, update_mc_version_json_with_fabric
 
         fabric_libraries = [
             build_version_json_libraries_item(

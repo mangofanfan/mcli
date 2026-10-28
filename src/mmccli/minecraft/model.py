@@ -1,4 +1,4 @@
-# mcli.minecraft.model
+# mmccli.minecraft.model
 
 from typing import Any, Literal
 

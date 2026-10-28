@@ -1,4 +1,4 @@
-# mcli.minecraft
+# mmccli.minecraft
 
 from ._model import McGameVersionJson_LibrariesItemDownloadsArtifact
 from .app import app as app_minecraft

@@ -1,7 +1,7 @@
 import requests
 from msal import PublicClientApplication
 
-from mcli.log import out
+from mmccli.log import out
 from .error import MicrosoftOauthError
 from .model import DeviceFlowResult, XboxLiveResult, MinecraftServiceAuthResult
 

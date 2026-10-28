@@ -1,4 +1,4 @@
-# mcli.forge
+# mmccli.forge
 
 from .install import install_forge_silently, rename_forge_version
 from .model import ForgeInstallerVersionInfo

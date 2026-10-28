@@ -1,4 +1,4 @@
-# mcli.log
+# mmccli.log
 
 import os
 

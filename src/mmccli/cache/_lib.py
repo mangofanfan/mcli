@@ -1,18 +1,18 @@
-# mcli.cache._lib
+# mmccli.cache._lib
 
 import os
 import platform
 import shutil
 from pathlib import Path
 
-from mcli.log import useGlobalState
+from mmccli.log import useGlobalState
 
 match platform.system():
     case "Windows":
         ENV_HOME_NAME = "USERPROFILE"
     case _:
         ENV_HOME_NAME = "HOME"
-CACHE_ROOT_DIR = Path(os.environ.get(ENV_HOME_NAME, "")) / ".mcli" / "cache"
+CACHE_ROOT_DIR = Path(os.environ.get(ENV_HOME_NAME, "")) / ".mmccli" / "cache"
 CACHE_ROOT_DIR.mkdir(parents=True, exist_ok=True)
 
 

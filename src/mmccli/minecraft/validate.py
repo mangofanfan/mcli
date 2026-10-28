@@ -1,6 +1,6 @@
 from pypdl.utils import FileValidator
 
-from mcli.log import out, warn
+from mmccli.log import out, warn
 
 from ._model import McGameAssetIndexJson_ObjectsItem
 from .model import McGameVersionJson_LibrariesItem
