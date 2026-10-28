@@ -1,0 +1,6 @@
+https://github.com/bangbang93/forge-install-bootstrapper
+
+计划用于 Forge 的静默安装。
+
+作者：bangbang93
+版本：v0.3.0
