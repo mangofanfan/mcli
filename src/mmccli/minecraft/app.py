@@ -1,11 +1,11 @@
 # mmccli.minecraft.app
-
+from pathlib import Path
 from typing import Annotated, Literal
 
 import typer
 from rich.table import Table
 
-from mmccli.log import err, info, raw
+from mmccli.log import err, info, raw, warn
 
 from .manifests import load_mc_manifest_v2, load_mc_manifest_v2_from_cache
 
@@ -64,3 +64,27 @@ def list_version(
             count += 1
     raw(table)
     info(f"已列出 {count} 个 Minecraft 版本。")
+
+
+@app.command(name="init")
+def init_minecraft_installation():
+    """在当前目录下初始化 Minecraft 安装目录。"""
+    from mmccli.log import useGlobalState
+
+    from .launch_profiles import write_default_launcher_profiles_json
+
+    minecraft_path = Path.cwd() / ".minecraft"
+    useGlobalState.MINECRAFT = minecraft_path
+
+    if minecraft_path.exists():
+        err(f"目录 {minecraft_path!s} 已存在，出于安全考虑任务已终止。")
+        warn("您很有可能误输入此命令。")
+        warn("如果您确实想要删除该 Minecraft 游戏目录，请手动删除。参考命令如下：")
+        warn("\trm -rf .minecraft")
+        raise typer.Exit(code=403)
+
+    info(f"初始化 Minecraft 游戏安装目录 > {minecraft_path!s}")
+
+    minecraft_path.mkdir(exist_ok=True, parents=True)
+    write_default_launcher_profiles_json()
+    info("初始化完成。")

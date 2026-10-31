@@ -1,23 +1,20 @@
 # mmccli.app
 from dotenv import load_dotenv
 
-from mmccli.forge import rename_forge_version
-from mmccli.path_dector import detect_minecraft_install_folder
-
 load_dotenv()
 
-import re
+# 务必首先导入环境变量~
+
 from typing import Annotated
 
 import typer
 
-from mmccli.log import err, info, out, useGlobalState, warn
-from mmccli.minecraft import app_minecraft, load_mc_version_from_cache
+from mmccli.log import err, info, useGlobalState, warn
+from mmccli.minecraft import app_minecraft
+from mmccli.path_dector import detect_minecraft_install_folder
 
 app = typer.Typer(help="Minecraft Java Cli", name="MCLI")
 app.add_typer(app_minecraft)
-
-pattern = re.compile(r"To sign in, use a web browser to open the page (\S*) and enter the code (\S*) to authenticate.")
 
 
 @app.command()
@@ -29,32 +26,6 @@ def login():
     """
     err("正版登录尚不可用，因为 Mojang 没有批准 MCLI 访问其游戏服务 API。")
     raise typer.Exit(code=100)
-
-    from mmccli.ms_oauth import (
-        login_for_minecraft_with_xsts,
-        login_for_xbox_live,
-        login_for_xsts,
-        login_with_microsoft_oauth,
-        wait_for_access_token,
-    )
-
-    out("正在创建 Device Code 以登录微软账号……")
-
-    flow = login_with_microsoft_oauth()
-    validateInfo: tuple[str, str] = pattern.findall(flow["message"])[0]
-    info(f"请在浏览器中打开页面 {validateInfo[0]}，并输入代码 {validateInfo[1]} 完成登录。")
-
-    ms_data = wait_for_access_token(flow)  # 阻塞直到用户授权
-    out("已完成微软账号登录，开始 Xbox Live 验证……")
-
-    xbl_data = login_for_xbox_live(ms_data.access_token)
-    out("已完成 Xbox Live 验证，开始获取 XSTS 令牌。")
-
-    xsts_data = login_for_xsts(xbl_data.Token)
-    out("已获取 XSTS 令牌，开始获取 Minecraft 令牌。")
-
-    mc_data = login_for_minecraft_with_xsts(xsts_data.DisplayClaims.xui[0].uhs, xsts_data.Token)
-    out("已获取 Minecraft 令牌，开始获取玩家信息。")
 
 
 @app.command()
@@ -75,9 +46,7 @@ def add(
     """
     添加一个游戏版本并立刻开始构建。
     """
-    if detect_minecraft_install_folder():
-        out(f"{useGlobalState.MINECRAFT=}")
-    else:
+    if not detect_minecraft_install_folder():
         raise typer.Exit(code=418)
 
     forge_version_info = None
@@ -87,6 +56,8 @@ def add(
         raise typer.Exit(code=500)
 
     info("正在查找 Minecraft 版本信息……")
+    from mmccli.minecraft import load_mc_version_from_cache, save_launcher_profiles_json
+
     mc_version = load_mc_version_from_cache(mc_version_id, True)  # latest-release 和 latest-snapshot 在此方法内处理
     if not mc_version:
         err(f"未找到游戏版本 {mc_version_id}，请检查。")
@@ -126,7 +97,6 @@ def add(
         load_assetsIndex_json,
         load_mc_version_json,
         save_assetIndex_json,
-        save_launcher_profiles_json,
         save_mc_version_json,
     )
 
@@ -135,42 +105,38 @@ def add(
     version_json.id = name  # 将自定义版本名称覆盖到 version.json
     info("已解析版本索引文件，开始下载库文件……")
 
-    from pypdl import Pypdl
-
-    dl = Pypdl(max_concurrent=48, allow_reuse=True)
-    download_libraries(version_json.libraries, dl, "minecraft")
+    download_libraries(version_json.libraries, "minecraft")
     info("库文件下载完成，开始解析资源索引文件……")
 
     assetIndex_json = load_assetsIndex_json(version_json.assetIndex.url)
     info("已解析资源索引文件，开始下载资源文件……")
 
-    download_assets(assetIndex_json, dl)
+    download_assets(assetIndex_json)
     info("资源文件下载完成，开始下载游戏主文件……")
 
     download_mc_version_jar(
         vanilla_mc_version_id,
         version_json.downloads["client"],
-        dl,
         vanilla_mc_version_id if forge_version_info else name,
     )  # 由于 Forge 安装器需要基于合法的原版游戏进行安装，所以要保留合法的原版游戏。
     info("游戏主文件下载完成，保存资源索引……")
 
     save_assetIndex_json(version_json.assets, assetIndex_json)
-    save_mc_version_json(version_json, name)
+    save_mc_version_json(version_json, vanilla_mc_version_id if forge_version_info else name)
     save_launcher_profiles_json(version_json)
     info(f"已添加 Minecraft Java {version_json.id}")
 
     if forge_version_info:
-        forge_installer_path = download_forge_installer_jar(forge_version_info, dl)
+        forge_installer_path = download_forge_installer_jar(forge_version_info)
         info(f"已下载 Forge 安装器 {forge_version_info.name}，开始解析 Forge 版本信息……")
 
         forge_version_json, forge_install_profile_json = analysis_forge_installer_version_json(forge_installer_path)
         info("已解析 Forge 版本信息，开始下载 Forge 库文件……")
 
-        download_libraries(forge_version_json.libraries + forge_install_profile_json.libraries, dl, "forge")
+        download_libraries(forge_version_json.libraries + forge_install_profile_json.libraries, "forge")
         info("Forge 库文件下载完成，开始安装 Forge……")
 
-        from mmccli.forge import install_forge_silently
+        from mmccli.forge import install_forge_silently, rename_forge_version
 
         if install_forge_silently(str(forge_installer_path), str(useGlobalState.MINECRAFT)):
             rename_forge_version(vanilla_mc_version_id, forge_version_info.id, name)
@@ -205,7 +171,7 @@ def add(
         )
         info("已解析 Fabric 版本信息，开始下载 Fabric 库文件……")
 
-        download_libraries(fabric_libraries, dl, "fabric")
+        download_libraries(fabric_libraries, "fabric")
         info("Fabric 库文件下载完成，更新版本 json 文件中……")
 
         save_mc_version_json(
@@ -215,9 +181,6 @@ def add(
             name,
         )
         info(f"Fabric loader {fabric_version_info.loader.version} 已为 Minecraft {version_json.id} 安装成功。")
-
-    dl.stop()
-    dl.shutdown()
 
     if useGlobalState.HARDLINK_DOWNGRADE_TO_FULL_COPY:
         warn("硬链接失败，已退化为全量复制文件。")

@@ -1,5 +1,4 @@
 # mmccli.minecraft.add
-import json
 import os
 import ssl
 import time
@@ -8,29 +7,24 @@ from typing import Literal
 
 import certifi
 import requests
-from pypdl import Pypdl
-from pypdl.utils import EFuture, FileValidator
-from rich.progress import Progress
+from rich.live import Live
+from rich.text import Text
 
 from mmccli.cache import (
     get_assets_cache_file_path,
     get_forge_installer_cache_file_path,
     get_library_cache_file_path,
     get_version_jar_cache_file_path,
-    link_or_move,
 )
+from mmccli.download import DownloadTask, start_download_task, start_download_tasks
 from mmccli.forge import ForgeInstallerVersionInfo
 from mmccli.forge.model import ForgeInstallerInstallProfileJson, ForgeInstallerVersionJson
-from mmccli.log import RequestStatusError, console, out, warn
+from mmccli.log import RequestStatusError, console, out, useGlobalState
 from mmccli.minecraft import (
     McGameAssetIndexJson,
     McGameVersionJson,
     McGameVersionJson_FileModel,
     McGameVersionJson_LibrariesItem,
-    McLauncherLaunchProfilesJson,
-    McLauncherLaunchProfilesJson_ProfilesItem,
-    validate_assets,
-    validate_libraries,
 )
 
 ssl_context = ssl.create_default_context(cafile=certifi.where())
@@ -58,9 +52,10 @@ def load_assetsIndex_json(assetIndex_json_url: str) -> McGameAssetIndexJson:
 
 def download_libraries(
     libraries: list[McGameVersionJson_LibrariesItem],
-    dl: Pypdl,
     libraries_from: Literal["minecraft", "forge", "fabric"],
 ):
+    if not useGlobalState.MINECRAFT:
+        raise RuntimeError(f"Unexpected value of {useGlobalState.MINECRAFT=}")
     if libraries_from == "minecraft":
         base_url = os.environ.get("MCLI_MC_GAME_DOWNLOAD_LIBRARIES_URL", None)
         template_url_prefix = "https://libraries.minecraft.net/"
@@ -71,7 +66,7 @@ def download_libraries(
         base_url = os.environ.get("MCLI_FABRIC_DOWNLOAD_LIBRARIES_URL", None)
         template_url_prefix = "https://maven.fabricmc.net/"
     else:
-        raise RuntimeError(f"Unexpected value {libraries_from=}")
+        raise RuntimeError(f"Unexpected value of {libraries_from=}")
 
     # 并非所有库文件都要下载，此处存放需要下载的库文件
     download_list: list[McGameVersionJson_LibrariesItem] = []
@@ -86,20 +81,16 @@ def download_libraries(
                 download_list.append(item)
 
     # 拼装任务列表，批量下载
-    tasks = []
-    copy_dict: COPY_DICT = {}
+    tasks: list[DownloadTask] = []
     total_size = 0
     for item in download_list:
         item: McGameVersionJson_LibrariesItem  # type: ignore[no-redef]
         if item.downloads.artifact.url == "":  # 为什么会存在 library 的 url 为空呢？
             continue  # 原来这个玩意是不需要手动下载的呀！
-        file_path = Path.cwd() / ".minecraft" / "libraries" / item.downloads.artifact.path  # 游戏目录中的库文件路径
+        file_path = useGlobalState.MINECRAFT / "libraries" / item.downloads.artifact.path  # 游戏目录中的库文件路径
         file_path.parent.mkdir(exist_ok=True, parents=True)
         cache_file_path = get_library_cache_file_path(item.downloads.artifact.path)  # 缓存中的库文件路径
         cache_file_path.parent.mkdir(exist_ok=True, parents=True)
-        copy_dict[file_path] = cache_file_path  # 建立关联
-        if cache_file_path.exists():
-            continue  # 信任缓存，跳过缓存命中
         if item.downloads.artifact.size:
             total_size += item.downloads.artifact.size
         url = (
@@ -107,102 +98,79 @@ def download_libraries(
             if base_url
             else item.downloads.artifact.url
         )
-        out(url)
         tasks.append(
-            {
-                "url": url,
-                "file_path": str(cache_file_path),
-                "retries": 2,
-                "segments": 8 if item.downloads.artifact.size and item.downloads.artifact.size >= 2_000_000 else 2,
-                "mirrors": item.downloads.artifact.url if base_url else None,
-            }
+            DownloadTask(
+                url=url,
+                url2=item.downloads.artifact.url if base_url else None,
+                file_path=file_path,
+                cache_file_path=cache_file_path,
+                size=item.downloads.artifact.size,
+                sha1=item.downloads.artifact.sha1,
+            )
         )
-    out(f"待下载库文件数量 | {len(tasks)=}")
 
-    if len(tasks) > 0:
-        results = _multi_download_with_progress(tasks, total_size, dl)
-        validate_libraries(download_list, results)
-    out("链接或复制文件……")
-
-    for file_path, cache_file_path in copy_dict.items():  # type: ignore[assignment]
-        link_or_move(cache_file_path, file_path)
+    _multi_download_with_progress(tasks, total_size)
     out("库文件已下载完成。")
 
 
-def download_assets(assetIndex_data: McGameAssetIndexJson, dl: Pypdl):
+def download_assets(assetIndex_data: McGameAssetIndexJson):
+    if not useGlobalState.MINECRAFT:
+        raise RuntimeError(f"Unexpected value of {useGlobalState.MINECRAFT=}")
     # 拼装任务列表，批量下载
-    tasks = []
-    copy_dict: COPY_DICT = {}
+    tasks: list[DownloadTask] = []
     total_size = 0
     base_url = os.environ.get("MCLI_MC_GAME_DOWNLOAD_ASSETS_URL", None)
     for item in assetIndex_data.objects.values():
-        file_path = Path.cwd() / ".minecraft" / "assets" / "objects" / item.hash[:2] / item.hash
-        file_path.parent.mkdir(exist_ok=True, parents=True)
+        file_path = useGlobalState.MINECRAFT / "assets" / "objects" / item.hash[:2] / item.hash
         cache_file_path = get_assets_cache_file_path(f"objects/{item.hash[:2]}/{item.hash}")
-        cache_file_path.parent.mkdir(exist_ok=True, parents=True)
-        copy_dict[file_path] = cache_file_path
-        if cache_file_path.exists():
-            continue  # 信任缓存，跳过缓存命中
         total_size += item.size
         path = item.hash[:2] + "/" + item.hash
         url = (base_url if base_url else "https://resources.download.minecraft.net/") + path
-        out(url)
         tasks.append(
-            {
-                "url": url,
-                "file_path": str(cache_file_path),
-                "retries": 2,
-                "segments": 4 if item.size >= 1_000_000 else 1,
-                "mirrors": ("https://resources.download.minecraft.net/" + path) if base_url else None,
-            }
+            DownloadTask(
+                url=url,
+                url2=("https://resources.download.minecraft.net/" + path) if base_url else None,
+                file_path=file_path,
+                cache_file_path=cache_file_path,
+                size=item.size,
+                sha1=item.hash,
+            )
         )
-    out(f"待下载资源文件数量 | {len(tasks)=}")
 
-    if len(tasks) > 0:
-        results = _multi_download_with_progress(tasks, total_size, dl)
-        validate_assets(list(assetIndex_data.objects.values()), results)
-    out("链接或复制文件……")
-
-    for file_path, cache_file_path in copy_dict.items():  # type: ignore[assignment]
-        link_or_move(cache_file_path, file_path)
+    _multi_download_with_progress(tasks, total_size, 64)
     out("资源文件已下载完成。")
 
 
-def download_mc_version_jar(version_id: str, clientItem: McGameVersionJson_FileModel, dl: Pypdl, name: str):
-    file_path = Path.cwd() / ".minecraft" / "versions" / name / (name + ".jar")
-    file_path.parent.mkdir(exist_ok=True, parents=True)
+def download_mc_version_jar(version_id: str, clientItem: McGameVersionJson_FileModel, name: str):
+    if not useGlobalState.MINECRAFT:
+        raise RuntimeError(f"Unexpected value of {useGlobalState.MINECRAFT=}")
+    file_path = useGlobalState.MINECRAFT / "versions" / name / (name + ".jar")
     cache_file_path = get_version_jar_cache_file_path("client/" + version_id + ".jar")
-    cache_file_path.parent.mkdir(exist_ok=True, parents=True)
     base_url = os.environ.get("MCLI_MC_GAME_DOWNLOAD_VERSIONS_URL", None)
-    if not cache_file_path.exists():  # 信任缓存
-        result = _single_download_with_progress(
+    _single_download_with_progress(
+        DownloadTask(
             url=clientItem.url.replace("https://piston-data.mojang.com/", base_url) if base_url else clientItem.url,
-            mirrors=clientItem.url if base_url else None,
-            file_path=str(cache_file_path),
+            url2=clientItem.url if base_url else None,
+            file_path=file_path,
+            cache_file_path=cache_file_path,
             size=clientItem.size,
-            dl=dl,
+            sha1=clientItem.sha1,
         )
-        if result[0][1].get_hash("sha1") != clientItem.sha1:
-            warn("下载的版本游戏主文件 version.jar 存在损坏。")
-    out("链接或复制文件……")
-
-    link_or_move(cache_file_path, file_path)
+    )
     out("版本 jar 游戏主文件下载完成。")
 
 
-def download_forge_installer_jar(info: ForgeInstallerVersionInfo, dl: Pypdl):
-    cache_file_path = get_forge_installer_cache_file_path(info.name)
-    cache_file_path.parent.mkdir(exist_ok=True, parents=True)
-    if not cache_file_path.exists():  # 信任缓存
-        result = _single_download_with_progress(
+def download_forge_installer_jar(info: ForgeInstallerVersionInfo):
+    # Forge 安装器仅存放在缓存中
+    file_path = get_forge_installer_cache_file_path(info.name)
+    file_path.parent.mkdir(exist_ok=True, parents=True)
+    _single_download_with_progress(
+        DownloadTask(
             url=f"https://bmclapi2.bangbang93.com/forge/download/{info.build}",
-            file_path=str(cache_file_path),
-            dl=dl,
+            file_path=file_path,
         )
-        if result[0][1].get_hash("sha1") != info.hash:
-            warn("下载的 Forge 安装器文件存在损坏。")
-
-    return cache_file_path
+    )
+    return file_path
 
 
 def analysis_forge_installer_version_json(file_path: str):
@@ -240,88 +208,71 @@ def save_assetIndex_json(assetIndex_id: str, assetIndex_json: McGameAssetIndexJs
     out("已保存资源文件索引 json 文件。")
 
 
-def save_launcher_profiles_json(mc_version_json: McGameVersionJson):
-    from datetime import datetime
-    from uuid import uuid4
+def _multi_download_with_progress(tasks: list[DownloadTask], total_size: int, sem_max: int = 32):
+    from math import floor
 
-    key = uuid4().hex
-    now = datetime.now()
+    total_task = len(tasks)
+    useGlobalState.DOWNLOAD_TASK_DOING = total_task
+    thread = start_download_tasks(tasks, sem_max)
 
-    # 已有启动器配置文件就写入，否则新建
-    file_path = Path.cwd() / ".minecraft" / "launcher_profiles.json"
-    file_path.parent.mkdir(exist_ok=True, parents=True)
-    profile = McLauncherLaunchProfilesJson_ProfilesItem(
-        created=now.isoformat(),
-        icon="Grass",
-        javaArgs="-Xms2G -Xmx4G -XX:+UseCompactObjectHeaders -XX:+AlwaysPreTouch -XX:+UseStringDeduplication -XX:+UseZGC",
-        lastUsed="1970-01-01T00:00:00.000Z",
-        lastVersionId=mc_version_json.id,
-        name=mc_version_json.id,
-        type="custom",
-    )
-    if file_path.exists():
-        with open(file=file_path, mode="r") as f:
-            launcher_profiles = McLauncherLaunchProfilesJson.model_validate_json(f.read())
-            launcher_profiles.profiles["key"] = profile
-    else:
-        launcher_profiles = McLauncherLaunchProfilesJson(
-            profiles={key: profile},
-            settings={},
-            version=6,
+    def update_live(completed_size: int, completed_task: int):
+        percent = min(40, floor(completed_task / total_task * 40))
+        return (
+            Text(text="[多任务下载中]", style="cyan on #495057")
+            + Text(text="\t<", style="default on default")
+            + Text(text="=" * percent, style="green on default")
+            + Text(text="=" * (40 - percent), style="default on default")
+            + Text(text=">\t[", style="default on default")
+            + Text(text=f"{completed_task}", style="green on default")
+            + Text(text="/", style="default on default")
+            + Text(text=f"{total_task}", style="#f7b1b0 on default")
+            + Text(text="]\t[", style="default on default")
+            + Text(text=f"{completed_size / 1_000}KB", style="green on default")
+            + Text(text="/", style="default on default")
+            + Text(text=f"{total_size / 1_000}KB", style="#f7b1b0 on default")
+            + Text(text="]", style="default on default")
         )
-    with open(file=file_path, mode="w", encoding="UTF-8") as f:
-        f.write(launcher_profiles.model_dump_json(indent=4))
-    out("已更新或新建启动器配置 json 文件。")
 
-
-def _multi_download_with_progress(tasks: list[dict], total_size: int, dl: Pypdl) -> list[tuple[str, FileValidator]]:
-    future: EFuture = dl.start(
-        tasks=tasks,
-        block=False,
-        hash_algorithms="sha1",
-        display=False,
-        proxy=os.environ.get("HTTP_PROXY", None),
-        overwrite=False,
-        ssl=ssl_context,
-    )
-
-    if len(tasks) > 0:
-        with Progress(console=console, transient=True) as progress:
-            task_files = progress.add_task("[cyan]下载总文件", total=dl.total_task)
-            task_size = progress.add_task("[green]下载总空间", total=total_size)
-            while not dl.completed:
-                progress.update(task_files, completed=dl.completed_task)
-                progress.update(task_size, completed=dl.current_size)
-                time.sleep(0.5)
-
-    return future.result()  # type: ignore[no-any-return]
-
-
-def _single_download_with_progress(
-    url: str,
-    file_path: str,
-    dl: Pypdl,
-    mirrors: str | list[str] | None = None,
-    size: int | None = None,
-) -> list[tuple[str, FileValidator]]:
-    future: EFuture = dl.start(
-        url=url,
-        file_path=file_path,
-        mirrors=mirrors,
-        segments=8,
-        retries=2,
-        block=False,
-        overwrite=False,
-        hash_algorithms="sha1",
-        display=False,
-        proxy=os.environ.get("HTTP_PROXY", None),
-        ssl=ssl_context,
-    )
-
-    with Progress(console=console, transient=True) as progress:
-        task_size = progress.add_task("[green]下载空间", total=size)
-        while not dl.completed:
-            progress.update(task_size, completed=dl.current_size)
+    with Live(update_live(0, 0), console=console, refresh_per_second=2, transient=True) as live:
+        while useGlobalState.DOWNLOAD_CONTINUE:
+            live.update(
+                update_live(
+                    completed_size=useGlobalState.DOWNLOAD_SIZE_COMPLETE,
+                    completed_task=useGlobalState.DOWNLOAD_TASK_COMPLETE,
+                )
+            )
             time.sleep(0.5)
+    thread.join()
 
-    return future.result()  # type: ignore[no-any-return]
+
+def _single_download_with_progress(task: DownloadTask):
+    thread = start_download_task(task)
+
+    def update_live(completed_size: int):
+        display = (
+            Text(text="[单任务下载中]", style="cyan on #495057")
+            + Text(text="\t「", style="default on default")
+            + Text(text="Fly higher my friend.", style="green on default")
+            + Text(text="」", style="default on default")
+        )
+        if task.size:
+            display += (
+                Text(text="\t[", style="default on default")
+                + Text(text=f"{completed_size / 1_000}KB", style="green on default")
+                + Text(text="/", style="default on default")
+                + Text(f"{task.size / 1_000}KB", style="#f7b1b0 on default")
+                + Text(text="]", style="default on default")
+            )
+        else:
+            display += (
+                Text(text="\t[", style="default on default")
+                + Text(text=f"{completed_size / 1_000}KB", style="green on default")
+                + Text(text="]", style="default on default")
+            )
+        return display
+
+    with Live(update_live(0), console=console, refresh_per_second=2, transient=True) as live:
+        while useGlobalState.DOWNLOAD_CONTINUE:
+            live.update(update_live(completed_size=useGlobalState.DOWNLOAD_SIZE_COMPLETE))
+            time.sleep(0.5)
+    thread.join()

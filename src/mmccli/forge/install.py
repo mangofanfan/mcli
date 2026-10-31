@@ -51,7 +51,7 @@ def install_forge_silently(forge_installer_path: str, minecraft_path: str):
 def rename_forge_version(vanilla_version_id: str, forge_version_id: str, name: str):
     """将 Forge 安装器静默安装生成的版本名称（26.2-forge-65.1.5）重命名成用户设置的"""
     if not useGlobalState.MINECRAFT:
-        raise RuntimeError(f"Unexpected None of {useGlobalState.MINECRAFT=}")
+        raise RuntimeError(f"Unexpected value of {useGlobalState.MINECRAFT=}")
     default_name = vanilla_version_id + "-forge-" + forge_version_id
     default_version_folder = useGlobalState.MINECRAFT / "versions" / default_name
     default_version_json_path = default_version_folder / (default_name + ".json")
@@ -64,4 +64,6 @@ def rename_forge_version(vanilla_version_id: str, forge_version_id: str, name: s
     target_version_folder.mkdir(exist_ok=False, parents=True)
     with open(file=target_version_json_path, mode="w", encoding="UTF-8") as f:
         f.write(forge_version_json.model_dump_json(indent=4))
+    default_version_json_path.unlink()
+    default_version_folder.rmdir()
     out(f"已重命名 Forge 安装至 {name}")

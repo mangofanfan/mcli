@@ -1,6 +1,6 @@
 [project]
 name = "mmccli"
-version = "0.1.0"
+version = "0.2.0"
 description = "Minecraft Java Edition Manager in Commandline."
 readme = "README.md"
 authors = [
@@ -8,12 +8,14 @@ authors = [
 ]
 requires-python = ">=3.14"
 dependencies = [
+    "aiodns>=4.0.4",
+    "aiofiles>=25.1.0",
+    "aiohttp>=3.14.5",
     "certifi>=2026.10.19",
     "click>=8.5.0",
     "dotenv>=0.9.9",
     "msal>=1.39.0",
     "pydantic>=2.14.1",
-    "pypdl>=1.5.7",
     "requests>=2.34.2",
     "rich>=15.0.0",
     "typer>=0.27.3",

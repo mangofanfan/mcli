@@ -2,6 +2,7 @@
 
 from ._model import McGameVersionJson_LibrariesItemDownloadsArtifact
 from .app import app as app_minecraft
+from .launch_profiles import save_launcher_profiles_json
 from .manifests import load_mc_version_from_cache
 from .model import (
     McGameAssetIndexJson,
@@ -18,7 +19,6 @@ from .model import (
     McLauncherLaunchProfilesJson,
     McLauncherLaunchProfilesJson_ProfilesItem,
 )
-from .validate import validate_assets, validate_libraries
 
 __all__ = [
     "McGameAssetIndexJson",
@@ -37,6 +37,5 @@ __all__ = [
     "McLauncherLaunchProfilesJson_ProfilesItem",
     "app_minecraft",
     "load_mc_version_from_cache",
-    "validate_assets",
-    "validate_libraries",
+    "save_launcher_profiles_json",
 ]
