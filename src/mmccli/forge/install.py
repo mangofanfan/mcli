@@ -40,7 +40,9 @@ def install_forge_silently(forge_installer_path: str, minecraft_path: str):
                 break  # 安装进程已结束
 
             if line:
-                live.update(f"[cyan]<installing forge>[/cyan] [black]{line.strip()}[/black]")
+                live.update(
+                    f"[cyan on white]<installing forge>[/cyan on white] [#a5afb1 on default]{line.strip()}[/#a5afb1 on default]"
+                )
 
     result = process.wait()
     if result != 0:
