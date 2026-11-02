@@ -11,10 +11,26 @@ import typer
 
 from mmccli.log import err, info, useGlobalState, warn
 from mmccli.minecraft import app_minecraft
-from mmccli.path_dector import detect_minecraft_install_folder
 
 app = typer.Typer(help="Minecraft Java Cli", name="MCLI")
 app.add_typer(app_minecraft)
+
+
+def _version_callback(value: bool):
+    if value:
+        from mmccli import __version__
+
+        print(f"MCLI-MMCCLI {__version__}")
+        raise typer.Exit()
+
+
+@app.callback()
+def main(
+    version: Annotated[
+        bool, typer.Option("--version", "-V", help="打印当前 MCLI 的版本号", callback=_version_callback, is_eager=True)
+    ] = False,
+):
+    pass
 
 
 @app.command()
@@ -46,6 +62,8 @@ def add(
     """
     添加一个游戏版本并立刻开始构建。
     """
+    from mmccli.path_dector import detect_minecraft_install_folder
+
     if not detect_minecraft_install_folder():
         raise typer.Exit(code=418)
 

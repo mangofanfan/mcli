@@ -21,6 +21,8 @@ if os.environ.get("MCLI_ENABLE_LOG_OUTPUT", None):
         out("HTTP_PROXY 环境变量已设置，代理将在网络请求中应用。")
     if os.environ.get("HTTPS_PROXY", None):
         out("HTTPS_PROXY 环境变量已设置，代理将在网络请求中应用。")
+    if os.environ.get("MCLI_NO_SSL_VERIFY", None):
+        out("SSL 验证已关闭（通过环境变量 MCLI_SSL_VERIFY）")
 
 __all__ = [
     "RequestStatusError",

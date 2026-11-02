@@ -2,10 +2,14 @@
 import asyncio
 import hashlib
 import os
+import ssl
 
 import aiofiles
+import certifi
 from aiohttp import ClientSession
+from aiohttp import __version__ as __aiohttp_version__
 
+from mmccli import __version__ as __mmccli_version__
 from mmccli.cache import link_or_move
 from mmccli.log import err, out, useGlobalState, warn
 
@@ -14,7 +18,10 @@ from .model import DownloadTask
 
 __all__ = ["async_download_task", "async_download_tasks"]
 
-headers = {"User-Agent": "MCLI-MMCCLI/0.2.0-alpha (+https://mango.js.cn/mcli) aiohttp/3.14.5"}
+headers = {"User-Agent": f"MCLI-MMCCLI/{__mmccli_version__} (+https://mango.js.cn/mcli) aiohttp/{__aiohttp_version__}"}
+ssl_context = (
+    False if os.environ.get("MCLI_NO_SSL_VERIFY", False) else ssl.create_default_context(cafile=certifi.where())
+)
 
 
 async def async_download_tasks(download_tasks: list[DownloadTask], sem_max: int):
@@ -68,7 +75,10 @@ async def _async_download(session: ClientSession, task: DownloadTask) -> tuple[b
 
     async def _download(iter_count: int):
         # 两次尝试 url，一次尝试 url2，然后报错
-        response = await session.get(url=task.url2 if iter_count == 2 and task.url2 else task.url, ssl=False)
+        response = await session.get(
+            url=task.url2 if iter_count == 2 and task.url2 else task.url,
+            ssl=ssl_context,
+        )
         response.raise_for_status()
         if response.ok:
             async with aiofiles.open(file=save_path, mode="wb") as af:
