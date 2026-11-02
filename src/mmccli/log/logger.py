@@ -1,26 +1,31 @@
 # mmccli.log.logger
+import logging
+import os
+
+import typer
 from rich.console import Console
-from rich.style import Style
-from rich.text import Text
+from rich.logging import RichHandler
 
-console = Console()
+console = Console(highlight=False)
+
+logging.basicConfig(
+    level=os.environ.get("MCLI_LOG_LEVEL", "INFO"),
+    format="%(message)s",
+    datefmt="[%X]",
+    handlers=[
+        RichHandler(
+            omit_repeated_times=False,
+            rich_tracebacks=True,
+            tracebacks_suppress=[typer],
+            console=console,
+        )
+    ],
+)
+
+logger = logging.getLogger("rich")
 
 
-def info(message: str):
-    console.print(Text(text="▶ ", style=Style(color="green")) + Text(text=message, style=Style(color="#90e0ef")))
-
-
-def warn(message: str):
-    console.print(Text(text="⁜ ", style=Style(color="yellow")) + Text(text=message, style=Style(color="#e9c46a")))
-
-
-def err(message: str):
-    console.print(Text(text="✕ ", style=Style(color="red")) + Text(text=message, style=Style(color="#e76f51")))
-
-
-def raw(message):
-    console.print(message)
-
-
-def no(message):
-    pass
+out = logger.debug
+info = logger.info
+warn = logger.warning
+err = logger.error

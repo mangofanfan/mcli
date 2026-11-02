@@ -3,12 +3,11 @@
 import os
 
 from .error import RequestStatusError
-from .gateway import out
-from .logger import console, err, info, raw, warn
+from .logger import console, err, info, out, warn
 from .state import useGlobalState
 
-if os.environ.get("MCLI_ENABLE_LOG_OUTPUT", None):
-    out("日志输出已启用（通过环境变量 MCLI_ENABLE_LOG_OUTPUT）")
+if level := os.environ.get("MCLI_LOG_LEVEL", "INFO"):
+    out(f"日志输出等级设置为 {level}。")
 
     if os.environ.get("MCLI_SKIP_ONLINE_AUTH", None):
         out("跳过正版验证已启用（通过环境变量 MCLI_SKIP_ONLINE_AUTH）")
@@ -30,7 +29,6 @@ __all__ = [
     "err",
     "info",
     "out",
-    "raw",
     "useGlobalState",
     "warn",
 ]

@@ -5,7 +5,7 @@ from typing import Annotated, Literal
 import typer
 from rich.table import Table
 
-from mmccli.log import err, info, raw, warn
+from mmccli.log import console, err, info, warn
 
 from .manifests import load_mc_manifest_v2, load_mc_manifest_v2_from_cache
 
@@ -62,7 +62,7 @@ def list_version(
                 str(datetime.fromisoformat(version.releaseTime)),
             )
             count += 1
-    raw(table)
+    console.print(table)
     info(f"已列出 {count} 个 Minecraft 版本。")
 
 

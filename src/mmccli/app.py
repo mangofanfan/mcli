@@ -9,7 +9,7 @@ from typing import Annotated
 
 import typer
 
-from mmccli.log import err, info, useGlobalState, warn
+from mmccli.log import console, err, info, useGlobalState, warn
 from mmccli.minecraft import app_minecraft
 
 app = typer.Typer(help="Minecraft Java Cli", name="MCLI")
@@ -30,7 +30,15 @@ def main(
         bool, typer.Option("--version", "-V", help="打印当前 MCLI 的版本号", callback=_version_callback, is_eager=True)
     ] = False,
 ):
-    pass
+    # 所有人都给我看一言喵
+    from importlib import resources
+    from random import choice
+
+    from mmccli import __version__
+
+    with open(file=str(resources.files("mmccli").joinpath("assets/hitokoto.txt")), mode="r", encoding="UTF-8") as f:
+        line = choice(f.readlines())
+    info(f"[#748cab]MCLI/{__version__} >[/#748cab] [#b5c99a]{line.strip()}[/#b5c99a]", extra={"markup": True})
 
 
 @app.command()
