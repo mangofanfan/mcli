@@ -80,10 +80,10 @@ class McLauncherLaunchProfilesJson_ProfilesItem(BaseModel):
     lastUsed: str | None = None
     lastVersionId: str
     name: str
-    type: Literal["latest-release", "latest=snapshot", "custom"]
+    type: Literal["latest-release", "latest-snapshot", "custom"]
 
 
 class McLauncherLaunchProfilesJson(BaseModel):
-    profiles: dict[str, McLauncherLaunchProfilesJson_ProfilesItem]
-    settings: dict[str, Any]
-    version: int
+    profiles: dict[str, McLauncherLaunchProfilesJson_ProfilesItem] | None = {}
+    settings: dict[str, Any] | None = {}
+    version: int | None = 6
