@@ -1,15 +1,10 @@
 # mmccli.app
-from dotenv import load_dotenv
-
-load_dotenv()
-
-# 务必首先导入环境变量~
 
 from typing import Annotated
 
 import typer
 
-from mmccli.log import console, err, info, useGlobalState, warn
+from mmccli.log import err, info, useGlobalState, warn  # mmccli.log 需要第一个导入
 from mmccli.minecraft import app_minecraft
 
 app = typer.Typer(help="Minecraft Java Cli", name="MCLI")
