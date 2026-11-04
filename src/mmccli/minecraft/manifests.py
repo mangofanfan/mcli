@@ -14,7 +14,7 @@ CACHE_DIR.mkdir(exist_ok=True)
 
 
 def load_mc_manifest_v2(save: bool = False):
-    url = os.environ.get("MCLI_MC_GAME_VERSION_MANIFEST_V2_JSON",
+    url = os.environ.get("MCLI_MINECRAFT_VERSION_MANIFEST_V2_JSON",
                          "https://launchermeta.mojang.com/mc/game/version_manifest_v2.json")
 
     response = requests.get(url)

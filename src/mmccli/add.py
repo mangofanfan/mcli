@@ -1,5 +1,5 @@
 # mmccli.minecraft.add
-import os
+
 import ssl
 import time
 from pathlib import Path
@@ -16,6 +16,7 @@ from mmccli.cache import (
     get_library_cache_file_path,
     get_version_jar_cache_file_path,
 )
+from mmccli.config import useMcliConfig
 from mmccli.download import DownloadTask, start_download_task, start_download_tasks
 from mmccli.forge import ForgeInstallerVersionInfo
 from mmccli.forge.model import ForgeInstallerInstallProfileJson, ForgeInstallerVersionJson
@@ -57,13 +58,13 @@ def download_libraries(
     if not useGlobalState.MINECRAFT:
         raise RuntimeError(f"Unexpected value of {useGlobalState.MINECRAFT=}")
     if libraries_from == "minecraft":
-        base_url = os.environ.get("MCLI_MC_GAME_DOWNLOAD_LIBRARIES_URL", None)
+        base_url = useMcliConfig.minecraft_download_libraries_url
         template_url_prefix = "https://libraries.minecraft.net/"
     elif libraries_from == "forge":
-        base_url = os.environ.get("MCLI_FORGE_DOWNLOAD_LIBRARIES_URL", None)
+        base_url = useMcliConfig.forge_download_libraries_url
         template_url_prefix = "https://maven.minecraftforge.net/"
     elif libraries_from == "fabric":
-        base_url = os.environ.get("MCLI_FABRIC_DOWNLOAD_LIBRARIES_URL", None)
+        base_url = useMcliConfig.fabric_download_libraries_url
         template_url_prefix = "https://maven.fabricmc.net/"
     else:
         raise RuntimeError(f"Unexpected value of {libraries_from=}")
@@ -119,17 +120,17 @@ def download_assets(assetIndex_data: McGameAssetIndexJson):
     # 拼装任务列表，批量下载
     tasks: list[DownloadTask] = []
     total_size = 0
-    base_url = os.environ.get("MCLI_MC_GAME_DOWNLOAD_ASSETS_URL", None)
+    base_url = useMcliConfig.minecraft_download_assets_url
     for item in assetIndex_data.objects.values():
         file_path = useGlobalState.MINECRAFT / "assets" / "objects" / item.hash[:2] / item.hash
         cache_file_path = get_assets_cache_file_path(f"objects/{item.hash[:2]}/{item.hash}")
         total_size += item.size
         path = item.hash[:2] + "/" + item.hash
-        url = (base_url if base_url else "https://resources.download.minecraft.net/") + path
+        url = base_url + path
         tasks.append(
             DownloadTask(
                 url=url,
-                url2=("https://resources.download.minecraft.net/" + path) if base_url else None,
+                url2="https://resources.download.minecraft.net/" + path,
                 file_path=file_path,
                 cache_file_path=cache_file_path,
                 size=item.size,
@@ -146,11 +147,11 @@ def download_mc_version_jar(version_id: str, clientItem: McGameVersionJson_FileM
         raise RuntimeError(f"Unexpected value of {useGlobalState.MINECRAFT=}")
     file_path = useGlobalState.MINECRAFT / "versions" / name / (name + ".jar")
     cache_file_path = get_version_jar_cache_file_path("client/" + version_id + ".jar")
-    base_url = os.environ.get("MCLI_MC_GAME_DOWNLOAD_VERSIONS_URL", None)
+    base_url = useMcliConfig.minecraft_download_versions_url
     _single_download_with_progress(
         DownloadTask(
-            url=clientItem.url.replace("https://piston-data.mojang.com/", base_url) if base_url else clientItem.url,
-            url2=clientItem.url if base_url else None,
+            url=clientItem.url.replace("https://piston-data.mojang.com/", base_url),
+            url2=clientItem.url,
             file_path=file_path,
             cache_file_path=cache_file_path,
             size=clientItem.size,

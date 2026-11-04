@@ -91,39 +91,39 @@ def mmccli_main_callback(
             rich_help_panel="Config options",
         ),
     ] = True,
-    mc_game_version_manifest_v2_json: Annotated[
+    minecraft_version_manifest_v2_json: Annotated[
         str,
         typer.Option(
-            "--mc-game-version-manifest-v2-json",
+            "--minecraft-version-manifest-v2-json",
             help="Minecraft 版本信息 URL",
-            envvar="MCLI_MC_GAME_VERSION_MANIFEST_V2_JSON",
+            envvar="MCLI_MINECRAFT_VERSION_MANIFEST_V2_JSON",
             rich_help_panel="Config options",
         ),
     ] = "https://launchermeta.mojang.com/mc/game/version_manifest_v2.json",
-    mc_game_download_libraries_url: Annotated[
+    minecraft_download_libraries_url: Annotated[
         str,
         typer.Option(
-            "--mc-game-download-libraries-url",
+            "--minecraft-download-libraries-url",
             help="Minecraft 依赖库文件下载 URL",
-            envvar="MCLI_MC_GAME_DOWNLOAD_LIBRARIES_URL",
+            envvar="MCLI_MINECRAFT_DOWNLOAD_LIBRARIES_URL",
             rich_help_panel="Config options",
         ),
     ] = "https://libraries.minecraft.net/",
-    mc_game_download_assets_url: Annotated[
+    minecraft_download_assets_url: Annotated[
         str,
         typer.Option(
-            "--mc-game-download-assets-url",
+            "--minecraft-download-assets-url",
             help="Minecraft 资源文件下载 URL",
-            envvar="MCLI_MC_GAME_DOWNLOAD_ASSETS_URL",
+            envvar="MCLI_MINECRAFT_DOWNLOAD_ASSETS_URL",
             rich_help_panel="Config options",
         ),
     ] = "https://resources.download.minecraft.net/",
-    mc_game_download_versions_url: Annotated[
+    minecraft_download_versions_url: Annotated[
         str,
         typer.Option(
-            "--mc-game-download-versions-url",
+            "--minecraft-download-versions-url",
             help="Minecraft 本体文件下载 URL",
-            envvar="MCLI_MC_GAME_DOWNLOAD_VERSIONS_URL",
+            envvar="MCLI_MINECRAFT_DOWNLOAD_VERSIONS_URL",
             rich_help_panel="Config options",
         ),
     ] = "https://piston-data.mojang.com/",
@@ -149,10 +149,10 @@ def mmccli_main_callback(
     useMcliConfig.log_level = log_level
     useMcliConfig.no_proxy = no_proxy
     useMcliConfig.no_ssl_verify = no_ssl_verify
-    useMcliConfig.mc_game_version_manifest_v2_json = mc_game_version_manifest_v2_json
-    useMcliConfig.mc_game_download_libraries_url = mc_game_download_libraries_url
-    useMcliConfig.mc_game_download_assets_url = mc_game_download_assets_url
-    useMcliConfig.mc_game_download_versions_url = mc_game_download_versions_url
+    useMcliConfig.minecraft_version_manifest_v2_json = minecraft_version_manifest_v2_json
+    useMcliConfig.minecraft_download_libraries_url = minecraft_download_libraries_url
+    useMcliConfig.minecraft_download_assets_url = minecraft_download_assets_url
+    useMcliConfig.minecraft_download_versions_url = minecraft_download_versions_url
     useMcliConfig.forge_download_libraries_url = forge_download_libraries_url
     useMcliConfig.fabric_download_libraries_url = fabric_download_libraries_url
 
