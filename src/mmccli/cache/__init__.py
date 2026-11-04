@@ -8,9 +8,11 @@ from ._lib import (
     get_version_jar_cache_file_path,
     link_or_move,
 )
+from .app import app as app_cache
 
 __all__ = [
     "CACHE_ROOT_DIR",
+    "app_cache",
     "get_assets_cache_file_path",
     "get_forge_installer_cache_file_path",
     "get_library_cache_file_path",

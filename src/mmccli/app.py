@@ -1,14 +1,38 @@
 # mmccli.app
 
+from importlib.metadata import version
+
+from dotenv import load_dotenv
+
+_dev_version = version("mmccli").find("dev") > 0
+
+if _dev_version:
+    load_dotenv()
+
+from importlib import resources
+from random import choice
 from typing import Annotated
 
 import typer
 
-from mmccli.log import err, info, useGlobalState, warn  # mmccli.log 需要第一个导入
+from mmccli.cache import app_cache
+from mmccli.config import app_config, useMcliConfig
+from mmccli.config.config_item import McliConfig_LogLevel
+from mmccli.log import console, err, info, out, useGlobalState, warn
 from mmccli.minecraft import app_minecraft
 
 app = typer.Typer(help="Minecraft Java Cli", name="MCLI")
 app.add_typer(app_minecraft)
+app.add_typer(app_cache)
+app.add_typer(app_config)
+
+
+with open(file=str(resources.files("mmccli").joinpath("assets/hitokoto.txt")), mode="r", encoding="UTF-8") as f:
+    line = choice(f.readlines())
+console.print(f"[#748cab]MCLI >[/#748cab] [#b5c99a]{line.strip()}[/#b5c99a]")
+
+if _dev_version:
+    out("正在运行 MCLI [yellow]开发中版本[/yellow]，[red]工作区环境变量[/red]会自动加载。", extra={"markup": True})
 
 
 def _version_callback(value: bool):
@@ -22,29 +46,107 @@ def _version_callback(value: bool):
 @app.callback()
 def main(
     version: Annotated[
-        bool, typer.Option("--version", "-V", help="打印当前 MCLI 的版本号", callback=_version_callback, is_eager=True)
+        bool,
+        typer.Option(
+            "--version",
+            "-V",
+            help="打印当前 MCLI 的版本号，并退出",
+            callback=_version_callback,
+            is_eager=True,
+            rich_help_panel="Info",
+        ),
     ] = False,
+    log_level: Annotated[
+        McliConfig_LogLevel,
+        typer.Option(
+            "--log-level",
+            help="设置日志输出级别",
+            envvar="MCLI_LOG_LEVEL",
+            rich_help_panel="Config options",
+        ),
+    ] = McliConfig_LogLevel.INFO,
+    no_proxy: Annotated[
+        bool,
+        typer.Option(
+            "--no-proxy",
+            help="布尔值，忽略环境变量中的代理设置",
+            envvar="MCLI_NO_PROXY",
+            rich_help_panel="Config options",
+        ),
+    ] = True,
+    no_ssl_verify: Annotated[
+        bool,
+        typer.Option(
+            "--no-ssl-verify",
+            help="布尔值，仅在下载文件时不验证 SSL 证书",
+            envvar="MCLI_NO_SSL_VERIFY",
+            rich_help_panel="Config options",
+        ),
+    ] = True,
+    mc_game_version_manifest_v2_json: Annotated[
+        str,
+        typer.Option(
+            "--mc-game-version-manifest-v2-json",
+            help="Minecraft 版本信息 URL",
+            envvar="MCLI_MC_GAME_VERSION_MANIFEST_V2_JSON",
+            rich_help_panel="Config options",
+        ),
+    ] = "https://launchermeta.mojang.com/mc/game/version_manifest_v2.json",
+    mc_game_download_libraries_url: Annotated[
+        str,
+        typer.Option(
+            "--mc-game-download-libraries-url",
+            help="Minecraft 依赖库文件下载 URL",
+            envvar="MCLI_MC_GAME_DOWNLOAD_LIBRARIES_URL",
+            rich_help_panel="Config options",
+        ),
+    ] = "https://libraries.minecraft.net/",
+    mc_game_download_assets_url: Annotated[
+        str,
+        typer.Option(
+            "--mc-game-download-assets-url",
+            help="Minecraft 资源文件下载 URL",
+            envvar="MCLI_MC_GAME_DOWNLOAD_ASSETS_URL",
+            rich_help_panel="Config options",
+        ),
+    ] = "https://resources.download.minecraft.net/",
+    mc_game_download_versions_url: Annotated[
+        str,
+        typer.Option(
+            "--mc-game-download-versions-url",
+            help="Minecraft 本体文件下载 URL",
+            envvar="MCLI_MC_GAME_DOWNLOAD_VERSIONS_URL",
+            rich_help_panel="Config options",
+        ),
+    ] = "https://piston-data.mojang.com/",
+    forge_download_libraries_url: Annotated[
+        str,
+        typer.Option(
+            "--forge-download-libraries-url",
+            help="Forge 依赖库文件下载 URL",
+            envvar="MCLI_FORGE_DOWNLOAD_LIBRARIES_URL",
+            rich_help_panel="Config options",
+        ),
+    ] = "https://maven.minecraftforge.net/",
+    fabric_download_libraries_url: Annotated[
+        str,
+        typer.Option(
+            "--fabric-download-libraries-url",
+            help="Fabric 依赖库文件下载 URL",
+            envvar="MCLI_FABRIC_DOWNLOAD_LIBRARIES_URL",
+            rich_help_panel="Config options",
+        ),
+    ] = "https://maven.fabricmc.net/",
 ):
-    # 所有人都给我看一言喵
-    from importlib import resources
-    from random import choice
-
-    from mmccli import __version__
-
-    with open(file=str(resources.files("mmccli").joinpath("assets/hitokoto.txt")), mode="r", encoding="UTF-8") as f:
-        line = choice(f.readlines())
-    info(f"[#748cab]MCLI/{__version__} >[/#748cab] [#b5c99a]{line.strip()}[/#b5c99a]", extra={"markup": True})
-
-
-@app.command()
-def login():
-    """
-    登录微软账号，验证您的 Minecraft Java 版游戏所有权。
-
-    由于未获得 Mojang 批准所以 TvT
-    """
-    err("正版登录尚不可用，因为 Mojang 没有批准 MCLI 访问其游戏服务 API。")
-    raise typer.Exit(code=100)
+    useMcliConfig.log_level = log_level
+    useMcliConfig.no_proxy = no_proxy
+    useMcliConfig.no_ssl_verify = no_ssl_verify
+    useMcliConfig.mc_game_version_manifest_v2_json = mc_game_version_manifest_v2_json
+    useMcliConfig.mc_game_download_libraries_url = mc_game_download_libraries_url
+    useMcliConfig.mc_game_download_assets_url = mc_game_download_assets_url
+    useMcliConfig.mc_game_download_versions_url = mc_game_download_versions_url
+    useMcliConfig.forge_download_libraries_url = forge_download_libraries_url
+    useMcliConfig.fabric_download_libraries_url = fabric_download_libraries_url
 
 
 @app.command()

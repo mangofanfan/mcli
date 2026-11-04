@@ -7,3 +7,6 @@ target-version = "py312"
 quote-style = "double"
 indent-style = "space"
 line-ending = "lf"
+
+[lint]
+ignore = ["UP032"]  # 为支持未来的多语言化

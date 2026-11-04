@@ -9,7 +9,7 @@ from mmccli.log import console, err, info, warn
 
 from .manifests import load_mc_manifest_v2, load_mc_manifest_v2_from_cache
 
-app = typer.Typer(help="管理 Minecraft 版本实例的子命令。", name="minecraft")
+app = typer.Typer(help="管理 Minecraft 版本实例。", name="minecraft")
 
 
 @app.command()

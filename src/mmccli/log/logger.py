@@ -2,6 +2,7 @@
 import logging
 import os
 
+import rich
 import typer
 from rich.console import Console
 from rich.logging import RichHandler
@@ -16,8 +17,9 @@ logging.basicConfig(
         RichHandler(
             omit_repeated_times=False,
             rich_tracebacks=True,
-            tracebacks_suppress=[typer],
+            tracebacks_suppress=[typer, rich],
             console=console,
+            show_path=False,
         )
     ],
 )
