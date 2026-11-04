@@ -3,6 +3,7 @@
 from importlib.metadata import version
 
 from dotenv import load_dotenv
+from rich.panel import Panel
 
 _dev_version = version("mmccli").find("dev") > 0
 
@@ -18,7 +19,7 @@ import typer
 from mmccli.cache import app_cache
 from mmccli.config import app_config, useMcliConfig
 from mmccli.config.config_item import McliConfig_LogLevel
-from mmccli.log import console, err, info, out, useGlobalState, warn
+from mmccli.log import console, err, info, useGlobalState, warn
 from mmccli.minecraft import app_minecraft
 
 app = typer.Typer(help="Minecraft Java Cli", name="MCLI")
@@ -32,7 +33,14 @@ with open(file=str(resources.files("mmccli").joinpath("assets/hitokoto.txt")), m
 console.print(f"[#748cab]MCLI >[/#748cab] [#b5c99a]{line.strip()}[/#b5c99a]")
 
 if _dev_version:
-    out("正在运行 MCLI [yellow]开发中版本[/yellow]，[red]工作区环境变量[/red]会自动加载。", extra={"markup": True})
+    panel = Panel(
+        "正在运行 MCLI [yellow]开发中版本[/yellow]，[red]工作区环境变量[/red]会自动加载。\n"
+        "MCLI-MMCCLI [yellow]{version}[/yellow]".format(version=version("mmccli")),
+        title="Dev-Version Warning",
+        title_align="left",
+        border_style="yellow",
+    )
+    console.print(panel)
 
 
 def _version_callback(value: bool):
@@ -44,7 +52,7 @@ def _version_callback(value: bool):
 
 
 @app.callback()
-def main(
+def mmccli_main_callback(
     version: Annotated[
         bool,
         typer.Option(
@@ -149,8 +157,8 @@ def main(
     useMcliConfig.fabric_download_libraries_url = fabric_download_libraries_url
 
 
-@app.command()
-def add(
+@app.command(name="add")
+def mmccli_add(
     mc_version_id: Annotated[
         str, typer.Option("--minecraft", "-mc", help="Minecraft 本体版本，或用 latest-release 和 latest-snapshot")
     ],

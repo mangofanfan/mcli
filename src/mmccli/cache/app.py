@@ -9,7 +9,7 @@ import typer
 from rich import box
 from rich.table import Table
 
-from mmccli.log import console, info, out
+from mmccli.log import console_stdout, info, out
 
 from ._lib import CACHE_ROOT_DIR
 
@@ -61,7 +61,7 @@ def mmccli_cache_size():
     _data("versions")
     _data("forge-installer")
 
-    console.print(table)
+    console_stdout.print(table)
 
 
 @app.command(name="clean")

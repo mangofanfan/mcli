@@ -7,7 +7,10 @@ import typer
 from rich.console import Console
 from rich.logging import RichHandler
 
-console = Console(highlight=False)
+# console 是输出到标准错误的控制台，用于大部分内容，包括日志
+# console_stdout 是输出到标准输出的控制台，用于返回有效信息
+console = Console(highlight=False, stderr=True)
+console_stdout = Console(highlight=False)
 
 logging.basicConfig(
     level=os.environ.get("MCLI_LOG_LEVEL", "INFO"),
