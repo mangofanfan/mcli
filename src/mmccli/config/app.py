@@ -1,26 +1,19 @@
 # mmccli.config.app
-import os
+
 import platform
 from enum import Enum
-from pathlib import Path
+from typing import Annotated
 
 import typer
 from rich import box
 from rich.table import Table
 
-from mmccli.log import console_stdout, info
+from mmccli.log import console_stdout, err, info
 
-from .state import useMcliConfig
+from .config_item import McliConfig_LogLevel
+from .state import CONFIG_ROOT_DIR, McliConfig, save_config_to_file, useMcliConfig
 
 app = typer.Typer(name="config", help="查看、管理 MCLI 配置")
-
-
-match platform.system():
-    case "Windows":
-        ENV_HOME_NAME = "USERPROFILE"
-    case _:
-        ENV_HOME_NAME = "HOME"
-CONFIG_ROOT_DIR = Path(os.environ.get(ENV_HOME_NAME, "")) / ".config" / "mmccli"
 
 
 @app.command(name="list")
@@ -40,21 +33,17 @@ def mmccli_config_list():
     table.add_column(style="yellow")
     table.add_column(style="white")
     for key, value in useMcliConfig.model_dump().items():
-        table.add_row(key, _render(value))
+        table.add_row(key.replace("_", "-"), _render(value))
     console_stdout.print(table)
 
 
 @app.command(name="openfile")
 def mmccli_config_openfile():
-    """打开 MCLI 配置文件，不存在则先创建。"""
+    """打开 MCLI 配置文件。"""
     import subprocess
 
     CONFIG_ROOT_DIR.mkdir(exist_ok=True, parents=True)
     config_file_path = CONFIG_ROOT_DIR / "mmccli.toml"
-    if not config_file_path.exists():
-        with open(file=config_file_path, mode="w", encoding="UTF-8") as f:
-            f.write("# mmccli/mmccli.toml\n# see https://mango.js.cn/docs/mcli/concept/config\n")
-        info("新的 MCLI 配置文件已创建 > {path}".format(path=str(config_file_path)))
 
     kwargs = {}
     if platform.system() == "Windows":
@@ -63,6 +52,44 @@ def mmccli_config_openfile():
     else:
         kwargs["start_new_session"] = True
         command = "code"
+
+    if not config_file_path.exists():
+        save_config_to_file("log_level", "INFO")
     subprocess.Popen([command, str(config_file_path)], **kwargs)
 
     info("已打开 MCLI 配置文件。")
+
+
+@app.command(name="set")
+def mmccli_config_set(
+    key: Annotated[str, typer.Argument(help="配置键")],
+    value: Annotated[str, typer.Argument(help="配置值")],
+):
+    """配置 MCLI。"""
+    if "_" in key:
+        err("{key} 不是合法的配置键名。".format(key=key))
+        raise typer.Exit(400)
+
+    inner_key = key.replace("-", "_")
+    if inner_key in useMcliConfig.model_dump():
+        success = False
+        if value == "True":
+            save_config_to_file(inner_key, True)
+            success = True
+        elif value == "False":
+            save_config_to_file(inner_key, False)
+            success = True
+
+        if inner_key == "log_level":
+            for level in McliConfig_LogLevel:
+                if level.value == value:
+                    save_config_to_file(inner_key, value)
+                    success = True
+                    continue
+
+        if not success:
+            save_config_to_file(inner_key, value)
+        info("{key} 已设置。".format(key=key))
+    else:
+        err("{key} 不是合法的配置键名。".format(key=key))
+        raise typer.Exit(400)
