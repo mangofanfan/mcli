@@ -1,3 +1,5 @@
+# mmccli.config.state
+
 import os
 import platform
 from pathlib import Path
