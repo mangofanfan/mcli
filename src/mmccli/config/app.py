@@ -1,5 +1,5 @@
 # mmccli.config.app
-
+import os
 import platform
 from enum import Enum
 from typing import Annotated
@@ -11,7 +11,7 @@ from rich.table import Table
 from mmccli.log import console_stdout, err, info
 
 from .config_item import McliConfig_LogLevel
-from .state import CONFIG_ROOT_DIR, McliConfig, save_config_to_file, useMcliConfig
+from .state import CONFIG_ROOT_DIR, save_config_to_file, useMcliConfig
 
 app = typer.Typer(name="config", help="查看、管理 MCLI 配置")
 
@@ -37,8 +37,8 @@ def mmccli_config_list():
     console_stdout.print(table)
 
 
-@app.command(name="openfile")
-def mmccli_config_openfile():
+@app.command(name="edit")
+def mmccli_config_edit():
     """打开 MCLI 配置文件。"""
     import subprocess
 
@@ -48,16 +48,26 @@ def mmccli_config_openfile():
     kwargs = {}
     if platform.system() == "Windows":
         kwargs["creationflags"] = subprocess.DETACHED_PROCESS | subprocess.CREATE_NO_WINDOW
-        command = "code.cmd"
+        default_command = "notepad.exe"
     else:
         kwargs["start_new_session"] = True
-        command = "code"
+        default_command = "vi"
+    command = (
+        os.environ.get("VISUAL", os.environ.get("EDITOR", default_command))
+        if (_editor := useMcliConfig.editor) == "#default"
+        else _editor
+    )
 
     if not config_file_path.exists():
         save_config_to_file("log_level", "INFO")
-    subprocess.Popen([command, str(config_file_path)], **kwargs)
-
-    info("已打开 MCLI 配置文件。")
+    try:
+        subprocess.Popen([command, str(config_file_path)], **kwargs)
+    except FileNotFoundError as e:
+        err("打开 MCLI 配置文件失败：找不到文件编辑命令 {command}".format(command=command))
+        err(e)
+        raise typer.Exit(404)
+    else:
+        info("已打开 MCLI 配置文件。")
 
 
 @app.command(name="set")

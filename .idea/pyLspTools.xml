@@ -13,4 +13,8 @@
       </map>
     </option>
   </component>
+  <component name="RuffConfiguration">
+    <option name="fixOnSave" value="true" />
+    <option name="formatSortImports" value="true" />
+  </component>
 </project>

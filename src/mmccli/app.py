@@ -72,7 +72,7 @@ def mmccli_main_callback(
             envvar="MCLI_LOG_LEVEL",
             rich_help_panel="Config options",
         ),
-    ] = McliConfig_LogLevel.INFO,
+    ] = useMcliConfig.log_level,
     no_proxy: Annotated[
         bool,
         typer.Option(
@@ -81,7 +81,7 @@ def mmccli_main_callback(
             envvar="MCLI_NO_PROXY",
             rich_help_panel="Config options",
         ),
-    ] = True,
+    ] = useMcliConfig.no_proxy,
     no_ssl_verify: Annotated[
         bool,
         typer.Option(
@@ -90,7 +90,16 @@ def mmccli_main_callback(
             envvar="MCLI_NO_SSL_VERIFY",
             rich_help_panel="Config options",
         ),
-    ] = True,
+    ] = useMcliConfig.no_ssl_verify,
+    editor: Annotated[
+        str,
+        typer.Option(
+            "--editor",
+            help="使用的文件编辑命令",
+            envvar="MCLI_EDITOR",
+            rich_help_panel="Config options",
+        ),
+    ] = useMcliConfig.editor,
     minecraft_version_manifest_v2_json: Annotated[
         str,
         typer.Option(
@@ -99,7 +108,7 @@ def mmccli_main_callback(
             envvar="MCLI_MINECRAFT_VERSION_MANIFEST_V2_JSON",
             rich_help_panel="Config options",
         ),
-    ] = "https://launchermeta.mojang.com/mc/game/version_manifest_v2.json",
+    ] = useMcliConfig.minecraft_version_manifest_v2_json,
     minecraft_download_libraries_url: Annotated[
         str,
         typer.Option(
@@ -108,7 +117,7 @@ def mmccli_main_callback(
             envvar="MCLI_MINECRAFT_DOWNLOAD_LIBRARIES_URL",
             rich_help_panel="Config options",
         ),
-    ] = "https://libraries.minecraft.net/",
+    ] = useMcliConfig.minecraft_download_libraries_url,
     minecraft_download_assets_url: Annotated[
         str,
         typer.Option(
@@ -117,7 +126,7 @@ def mmccli_main_callback(
             envvar="MCLI_MINECRAFT_DOWNLOAD_ASSETS_URL",
             rich_help_panel="Config options",
         ),
-    ] = "https://resources.download.minecraft.net/",
+    ] = useMcliConfig.minecraft_download_assets_url,
     minecraft_download_versions_url: Annotated[
         str,
         typer.Option(
@@ -126,7 +135,7 @@ def mmccli_main_callback(
             envvar="MCLI_MINECRAFT_DOWNLOAD_VERSIONS_URL",
             rich_help_panel="Config options",
         ),
-    ] = "https://piston-data.mojang.com/",
+    ] = useMcliConfig.minecraft_download_versions_url,
     forge_download_libraries_url: Annotated[
         str,
         typer.Option(
@@ -135,7 +144,7 @@ def mmccli_main_callback(
             envvar="MCLI_FORGE_DOWNLOAD_LIBRARIES_URL",
             rich_help_panel="Config options",
         ),
-    ] = "https://maven.minecraftforge.net/",
+    ] = useMcliConfig.forge_download_libraries_url,
     fabric_download_libraries_url: Annotated[
         str,
         typer.Option(
@@ -144,11 +153,12 @@ def mmccli_main_callback(
             envvar="MCLI_FABRIC_DOWNLOAD_LIBRARIES_URL",
             rich_help_panel="Config options",
         ),
-    ] = "https://maven.fabricmc.net/",
+    ] = useMcliConfig.fabric_download_libraries_url,
 ):
     useMcliConfig.log_level = log_level
     useMcliConfig.no_proxy = no_proxy
     useMcliConfig.no_ssl_verify = no_ssl_verify
+    useMcliConfig.editor = editor
     useMcliConfig.minecraft_version_manifest_v2_json = minecraft_version_manifest_v2_json
     useMcliConfig.minecraft_download_libraries_url = minecraft_download_libraries_url
     useMcliConfig.minecraft_download_assets_url = minecraft_download_assets_url

@@ -5,8 +5,10 @@ import platform
 from pathlib import Path
 from typing import Any
 
+import tomlkit
 from pydantic import BaseModel, Field
 
+from ..log import warn
 from .config_item import McliConfig_LogLevel
 
 
@@ -14,6 +16,7 @@ class McliConfig(BaseModel):
     log_level: McliConfig_LogLevel = Field(alias="log-level", default=McliConfig_LogLevel.INFO)
     no_proxy: bool = Field(alias="no-proxy", default=True)
     no_ssl_verify: bool = Field(alias="no-ssl-verify", default=True)
+    editor: str = Field(alias="editor", default="#default")
     minecraft_version_manifest_v2_json: str = Field(
         alias="minecraft-version-manifest-v2-json",
         default="https://launchermeta.mojang.com/mc/game/version_manifest_v2.json",
@@ -49,8 +52,6 @@ CONFIG_ROOT_DIR = Path(os.environ.get(ENV_HOME_NAME, "")) / ".config" / "mmccli"
 
 
 def save_config_to_file(key: str, value: Any):
-    import tomlkit
-
     path = CONFIG_ROOT_DIR / "mmccli.toml"
     key = key.lower()
 
@@ -61,6 +62,7 @@ def save_config_to_file(key: str, value: Any):
         doc = tomlkit.document()
         doc.add(tomlkit.comment("mmccli/mmccli.toml"))
         doc.add(tomlkit.comment("see https://mango.js.cn/docs/mcli/concept/config"))
+        doc.add(tomlkit.comment("If you cannot find where this file: ~/.config/mmccli/mmccli.toml"))
         doc.add(tomlkit.nl())
 
     if key.startswith("minecraft_"):
@@ -90,4 +92,31 @@ def save_config_to_file(key: str, value: Any):
         f.write(tomlkit.dumps(doc))
 
 
-useMcliConfig = McliConfig()
+def load_config_from_file() -> McliConfig:
+    path = CONFIG_ROOT_DIR / "mmccli.toml"
+    config = McliConfig()
+
+    if not path.exists():
+        return config
+
+    with open(file=path, mode="r", encoding="UTF-8") as f:
+        doc = tomlkit.parse(f.read())
+    for title in doc:
+        table: tomlkit.api.Table = doc[title]
+        for key, value in table.items():
+            key: str
+            name = title + "_" + key.replace("-", "_") if title != "mcli" else key.replace("-", "_")
+            if hasattr(config, name):
+                if name == "log_level":
+                    for enum in McliConfig_LogLevel:
+                        if value == enum.value:
+                            setattr(config, name, enum)
+                            break
+                else:
+                    setattr(config, name, value)
+            else:
+                warn("配置文件中的无效键 {key} = {value}".format(key=name, value=value))
+    return config
+
+
+useMcliConfig = load_config_from_file()
