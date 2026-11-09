@@ -1,0 +1,14 @@
+[pytest]
+minversion = "9.0"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "-s", # 允许 print 直接输出
+]
+testpaths = ["tests"]
+
+# pytest-asyncio
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
+asyncio_default_test_loop_scope = "function"

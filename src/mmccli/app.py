@@ -1,17 +1,5 @@
 # mmccli.app
 
-from importlib.metadata import version
-
-from dotenv import load_dotenv
-from rich.panel import Panel
-
-_dev_version = version("mmccli").find("dev") > 0
-
-if _dev_version:
-    load_dotenv()
-
-from importlib import resources
-from random import choice
 from typing import Annotated
 
 import typer
@@ -19,28 +7,13 @@ import typer
 from mmccli.cache import app_cache
 from mmccli.config import app_config, useMcliConfig
 from mmccli.config.config_item import McliConfig_LogLevel
-from mmccli.log import console, err, info, useGlobalState, warn
+from mmccli.log import err, info, useGlobalState, warn
 from mmccli.minecraft import app_minecraft
 
 app = typer.Typer(help="Minecraft Java Cli", name="MCLI")
 app.add_typer(app_minecraft)
 app.add_typer(app_cache)
 app.add_typer(app_config)
-
-
-with open(file=str(resources.files("mmccli").joinpath("assets/hitokoto.txt")), mode="r", encoding="UTF-8") as f:
-    line = choice(f.readlines())
-console.print(f"[#748cab]MCLI >[/#748cab] [#b5c99a]{line.strip()}[/#b5c99a]")
-
-if _dev_version:
-    panel = Panel(
-        "正在运行 MCLI [yellow]开发中版本[/yellow]，[red]工作区环境变量[/red]会自动加载。\n"
-        "MCLI-MMCCLI [yellow]{version}[/yellow]".format(version=version("mmccli")),
-        title="Dev-Version Warning",
-        title_align="left",
-        border_style="yellow",
-    )
-    console.print(panel)
 
 
 def _version_callback(value: bool):
