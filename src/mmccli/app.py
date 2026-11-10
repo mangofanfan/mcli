@@ -139,6 +139,10 @@ def mmccli_main_callback(
     useMcliConfig.forge_download_libraries_url = forge_download_libraries_url
     useMcliConfig.fabric_download_libraries_url = fabric_download_libraries_url
 
+    from mmccli.log.logger import logger
+
+    logger.setLevel(log_level.value)
+
 
 @app.command(name="add")
 def mmccli_add(

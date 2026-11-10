@@ -244,6 +244,7 @@ def _multi_download_with_progress(tasks: list[DownloadTask], total_size: int, se
             )
             time.sleep(0.5)
     thread.join()
+    useGlobalState.clear_download_status()
 
 
 def _single_download_with_progress(task: DownloadTask):
@@ -277,3 +278,4 @@ def _single_download_with_progress(task: DownloadTask):
             live.update(update_live(completed_size=useGlobalState.DOWNLOAD_SIZE_COMPLETE))
             time.sleep(0.5)
     thread.join()
+    useGlobalState.clear_download_status()

@@ -1,6 +1,6 @@
 # mmccli.fabric.install
-import os
 
+from mmccli.config import useMcliConfig
 from mmccli.fabric.model import FabricMetaVersions_LoaderItem_LauncherMeta_MainClass
 from mmccli.minecraft import (
     McGameVersionJson,
@@ -25,7 +25,12 @@ def build_version_json_libraries_item(name: str, base_url: str, size: int | None
         downloads=McGameVersionJson_LibrariesItemDownloads(
             artifact=McGameVersionJson_LibrariesItemDownloadsArtifact(
                 path=path,
-                url=os.environ.get("MCLI_FABRIC_DOWNLOAD_LIBRARIES_URL", base_url) + path,
+                url=(
+                    useMcliConfig.fabric_download_libraries_url
+                    if base_url == "https://libraries.mojang.com/"
+                    else base_url
+                )
+                + path,
                 size=size,
                 sha1=sha1,
             )

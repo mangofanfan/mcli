@@ -1,12 +1,13 @@
 # mmccli.minecraft.manifests
 import json
-import os
 
 import requests
 
 from mmccli.cache import CACHE_ROOT_DIR
 from mmccli.log import out, warn
 from mmccli.log.error import RequestStatusError
+
+from ..config import useMcliConfig
 from .model import McGameVersionManifestV2
 
 CACHE_DIR = CACHE_ROOT_DIR / "manifest"
@@ -14,8 +15,7 @@ CACHE_DIR.mkdir(exist_ok=True)
 
 
 def load_mc_manifest_v2(save: bool = False):
-    url = os.environ.get("MCLI_MINECRAFT_VERSION_MANIFEST_V2_JSON",
-                         "https://launchermeta.mojang.com/mc/game/version_manifest_v2.json")
+    url = useMcliConfig.minecraft_version_manifest_v2_json
 
     response = requests.get(url)
     data = response.json()
@@ -28,8 +28,11 @@ def load_mc_manifest_v2(save: bool = False):
 
         now_date = date.today()
         out(f"缓存为 {now_date} manifest.json。")
-        with open(file=CACHE_DIR / f"manifest_{now_date.year}_{now_date.month}_{now_date.day}.json", mode="w",
-                  encoding="UTF-8") as f:
+        with open(
+            file=CACHE_DIR / f"manifest_{now_date.year}_{now_date.month}_{now_date.day}.json",
+            mode="w",
+            encoding="UTF-8",
+        ) as f:
             f.write(json.dumps(data, indent=4))
 
     return manifest_data
@@ -65,15 +68,19 @@ def load_mc_version_from_cache(version_id: str, load_when_miss: bool = False):
         return False
 
     if version_id == "latest-release":
-        out("查找到的最近正式版条目：")
-        version = manifest_data.latest["release"]
-        out(version)
-        return version
-    elif version_id == 'latest-snapshot':
-        out("查找到的最近快照版条目：")
-        version = manifest_data.latest["snapshot"]
-        out(version)
-        return version
+        version_id = manifest_data.latest["release"]
+        for version in manifest_data.versions:
+            if version_id == version.id:
+                out("查找到的最近正式版条目：")
+                out(version)
+                return version
+    elif version_id == "latest-snapshot":
+        version_id = manifest_data.latest["snapshot"]
+        for version in manifest_data.versions:
+            if version_id == version.id:
+                out("查找到的最近快照版条目：")
+                out(version)
+                return version
 
     for version in manifest_data.versions:
         if version_id == version.id:

@@ -1,4 +1,4 @@
-import os
+# mmccli.fabric.versions
 
 import requests
 
@@ -12,10 +12,7 @@ CACHE_DIR.mkdir(exist_ok=True)
 
 
 def load_fabric_versions(mc_version_id: str, version_id: str):
-    url = (
-        os.environ.get("MCLI_FABRIC_META_VERSIONS_V2_URL", "https://meta.fabricmc.net/v2/versions/loader/")
-        + mc_version_id
-    )
+    url = "https://meta.fabricmc.net/v2/versions/loader/" + mc_version_id
     out(url)
     response = requests.get(url)
     data = response.json()

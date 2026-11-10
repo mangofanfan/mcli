@@ -11,7 +11,7 @@ from rich.table import Table
 from mmccli.log import console_stdout, err, info
 
 from .config_item import McliConfig_LogLevel
-from .state import CONFIG_ROOT_DIR, save_config_to_file, useMcliConfig
+from .gateway import CONFIG_ROOT_DIR, save_config_to_file, useMcliConfig
 
 app = typer.Typer(name="config", help="查看、管理 MCLI 配置")
 

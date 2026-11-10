@@ -1,6 +1,5 @@
 # mmccli.forge.promos
 import json
-import os
 from typing import Literal
 
 import requests
@@ -21,7 +20,7 @@ CACHE_DIR.mkdir(exist_ok=True)
 
 
 def load_forge_promos(save: bool = False) -> ForgePromosListJson:
-    url = os.environ.get("MCLI_FORGE_PROMOS_URL", "https://bmclapi2.bangbang93.com/forge/promos")
+    url = "https://bmclapi2.bangbang93.com/forge/promos"
     out(url)
     response = requests.get(url)
     data = response.json()

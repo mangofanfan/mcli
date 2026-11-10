@@ -5,16 +5,20 @@ __all__ = ["main"]
 
 
 def on_startup():
-    from importlib import resources
     from importlib.metadata import version
-    from random import choice
 
     from dotenv import load_dotenv
+
+    _dev_version = version("mmccli").find("dev") > 0
+    if _dev_version:
+        load_dotenv()
+
+    from importlib import resources
+    from random import choice
+
     from rich.panel import Panel
 
     from mmccli.log import console
-
-    _dev_version = version("mmccli").find("dev") > 0
 
     with open(file=str(resources.files("mmccli").joinpath("assets/hitokoto.txt")), mode="r", encoding="UTF-8") as f:
         line = choice(f.readlines())

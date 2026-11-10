@@ -18,10 +18,10 @@ from .model import DownloadTask
 
 __all__ = ["async_download_task", "async_download_tasks"]
 
+from ..config import useMcliConfig
+
 headers = {"User-Agent": f"MCLI-MMCCLI/{__mmccli_version__} (+https://mango.js.cn/mcli) aiohttp/{__aiohttp_version__}"}
-ssl_context = (
-    False if os.environ.get("MCLI_NO_SSL_VERIFY", False) else ssl.create_default_context(cafile=certifi.where())
-)
+ssl_context = False if useMcliConfig.no_ssl_verify else ssl.create_default_context(cafile=certifi.where())
 
 
 async def async_download_tasks(download_tasks: list[DownloadTask], sem_max: int):
@@ -111,7 +111,11 @@ async def _async_download(session: ClientSession, task: DownloadTask) -> tuple[b
                 link_or_move(task.cache_file_path, task.file_path)
             ok = True
         except Exception as e:
-            warn(f"async - {task.file_name} 下载出现异常，还剩 {2 - i} 次尝试 | {e!s}")
+            warn(
+                "[yellow]async -[/yellow] {task.file_name} 下载出现异常，还剩 {count} 次尝试 | {e!s}".format(
+                    task=task, e=e, count=2 - i
+                )
+            )
             errs.append(e)
             if 2 - i > 0:
                 continue
@@ -119,10 +123,10 @@ async def _async_download(session: ClientSession, task: DownloadTask) -> tuple[b
                 break
 
     if ok:
-        out(f"async - {task.file_name} 下载完成。")
+        out(f"[yellow]async -[/yellow] {task.file_name} 下载完成。")
         return True, task, errs
     else:
-        err(f"async - {task.file_name} 下载失败。")
+        err(f"[yellow]async -[/yellow] {task.file_name} 下载失败。")
         return False, task, errs
 
 
