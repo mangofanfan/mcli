@@ -4,6 +4,7 @@ addopts = [
     "-ra",
     "--strict-markers",
     "--strict-config",
+    "--cov=src",
     "-s", # 允许 print 直接输出
 ]
 testpaths = ["tests"]
