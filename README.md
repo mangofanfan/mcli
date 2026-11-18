@@ -1,4 +1,12 @@
-# Minecraft \(Java Edition Manager in\) Commandline
+<div align="center">
+    <img src="./images/mcli-icon.png" width="200px" alt="mcli-icon">
+    <h1>Minecraft (Java Edition Manager in) Command-Line</h1>
+    <p>
+        <a href="https://mango.js.cn/mcli" target="_blank">🌐介绍与文档</a>
+    </p>
+</div>
+
+## 简介
 
 > Minecraft Java 版命令行管理工具，简写为 MCLI，命令为 mmccli。
 >
@@ -12,7 +20,7 @@
 
 ## 特色
 
-MCLI 致力于实现类似于 *包管理器*的使用体验。
+MCLI 致力于实现类似于*包管理器*的使用体验。
 
 * 依赖库文件、资源文件等全局缓存，在游戏目录中硬链接。
 * 多任务、多线程并发下载，提高下载速度（也许）。
@@ -32,6 +40,8 @@ MCLI 致力于实现类似于 *包管理器*的使用体验。
 
 ## 使用
 
+MCLI 是一个命令行工具。
+
 ### 安装（或者不安装）
 
 ```shell
@@ -41,6 +51,8 @@ uvx mmccli <command>
 uv tool install mmccli
 mmccli <command>
 ```
+
+也可以使用 pipx、pip 或其他方法进行安装，但 uv 是推荐方案。
 
 ### 添加游戏
 
