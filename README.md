@@ -3,6 +3,8 @@
     <h1>Minecraft (Java Edition Manager in) Command-Line</h1>
     <p>
         <a href="https://mango.js.cn/mcli" target="_blank">🌐介绍与文档</a>
+        |
+        <strong>📖MIT</strong>
     </p>
 </div>
 
@@ -61,3 +63,22 @@ mmccli add --minecraft 26.1
 mmccli add --minecraft 26.2 --forge latest
 mmccli add --minecraft 26.3 --name "原版 26.3"
 ```
+
+## 许可
+
+### 代码
+
+MCLI 的代码资产使用 MIT 协议授权，请随意使用代码，唯需保留版权与许可声明。
+
+另外，请注意**您不可以使用 MCLI 的名称、图标等进行出于商业目的的宣传**，也**不可以以任何方式暗示您的商业资产与 MCLI
+存在不同寻常的关系**。此额外要求不与 MIT 协议冲突，也并不影响对 MCLI 代码资产的任何使用。
+
+### 其他
+
+MCLI 的非代码资产（例如图标、随附分发的文本与二进制文件）不在 MIT 授权范围之内。
+
+* MCLI 图标、文档等资产以 CC BY-NC 4.0 协议授权；
+* `/src/mmccli/bin/forge-install-bootstrapper.jar`
+  [按原样提供](https://github.com/bangbang93/forge-install-bootstrapper/releases/tag/v0.3.0)，项目协议为
+  [WTFPL](https://github.com/bangbang93/forge-install-bootstrapper/blob/master/LICENSE)。
+* `/src/mmccli/assets/hitokoto.txt` 是来自互联网的混合内容，无法明确其许可。

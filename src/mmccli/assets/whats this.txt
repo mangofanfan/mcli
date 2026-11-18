@@ -6,7 +6,7 @@
 
 * 诗歌作品与知名名言
 * 公共接口
-  * [一言](https://hitokoto.cn/)
+  * [一言](https://hitokoto.cn/)（[AGPL](https://sentences-bundle.hitokoto.cn/)）
 * 游戏及其社区
   * 原神
   * 我的世界

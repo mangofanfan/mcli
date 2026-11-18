@@ -4,3 +4,4 @@ https://github.com/bangbang93/forge-install-bootstrapper
 
 作者：bangbang93
 版本：v0.3.0
+许可：[WTFPL](https://github.com/bangbang93/forge-install-bootstrapper/blob/master/LICENSE)
