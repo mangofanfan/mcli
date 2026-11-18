@@ -1,7 +1,4 @@
 # mmccli.config.gateway
-
-import os
-import platform
 from pathlib import Path
 from typing import Any
 
@@ -10,18 +7,15 @@ import tomlkit
 from mmccli.log import warn
 
 from .config_item import McliConfig_LogLevel
-from .state import McliConfig
+from .state import McliConfig, useMcliContext
 
-match platform.system():
-    case "Windows":
-        ENV_HOME_NAME = "USERPROFILE"
-    case _:
-        ENV_HOME_NAME = "HOME"
-CONFIG_ROOT_DIR = Path(os.environ.get(ENV_HOME_NAME, "")) / ".config" / "mmccli"
+__all__ = [
+    "save_config_to_file",
+    "useMcliConfig",
+]
 
 
-def save_config_to_file(key: str, value: Any):
-    path = CONFIG_ROOT_DIR / "mmccli.toml"
+def save_config_to_file(key: str, value: Any, path: Path = Path("~/.config/mmccli/mmccli.toml")) -> None:
     key = key.lower()
 
     if path.exists():
@@ -31,7 +25,7 @@ def save_config_to_file(key: str, value: Any):
         doc = tomlkit.document()
         doc.add(tomlkit.comment("mmccli/mmccli.toml"))
         doc.add(tomlkit.comment("see https://mango.js.cn/docs/mcli/concept/config"))
-        doc.add(tomlkit.comment("If you cannot find where this file: ~/.config/mmccli/mmccli.toml"))
+        doc.add(tomlkit.comment("If you cannot find where this file: {path!s}".format(path=path.expanduser())))
         doc.add(tomlkit.nl())
 
     if key.startswith("minecraft_"):
@@ -62,7 +56,7 @@ def save_config_to_file(key: str, value: Any):
 
 
 def load_config_from_file() -> McliConfig:
-    path = CONFIG_ROOT_DIR / "mmccli.toml"
+    path = useMcliContext.config_dir / "mmccli.toml"
     config = McliConfig()
 
     if not path.exists():

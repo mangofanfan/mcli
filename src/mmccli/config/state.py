@@ -1,8 +1,15 @@
 # mmccli.config.state
+import os
+from pathlib import Path
 
 from pydantic import BaseModel, Field
 
 from .config_item import McliConfig_LogLevel
+
+__all__ = [
+    "McliConfig",
+    "useMcliContext",
+]
 
 
 class McliConfig(BaseModel):
@@ -34,3 +41,22 @@ class McliConfig(BaseModel):
         alias="fabric-download-libraries-url",
         default="https://maven.fabricmc.net/",
     )
+
+
+class McliContext(BaseModel):
+    config_dir: Path = Field(default=Path("~/.config/mmccli").expanduser())
+    mmccli_dir: Path = Field(default=Path("~/.mmccli").expanduser())
+
+
+def _get_path_from_env_else_none(env_var: str):
+    if env_var in os.environ:
+        return Path(os.environ[env_var])
+    return None
+
+
+context_paths = {
+    "config_dir": _get_path_from_env_else_none("MCLI_CONTEXT_CONFIG_DIR"),
+    "mmccli_dir": _get_path_from_env_else_none("MCLI_CONTEXT_MMCCLI_DIR"),
+}
+
+useMcliContext = McliContext(**{name: path for name, path in context_paths.items() if path is not None})

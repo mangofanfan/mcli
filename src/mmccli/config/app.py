@@ -11,7 +11,8 @@ from rich.table import Table
 from mmccli.log import console_stdout, err, info
 
 from .config_item import McliConfig_LogLevel
-from .gateway import CONFIG_ROOT_DIR, save_config_to_file, useMcliConfig
+from .gateway import save_config_to_file, useMcliConfig
+from .state import useMcliContext
 
 app = typer.Typer(name="config", help="查看、管理 MCLI 配置")
 
@@ -42,6 +43,8 @@ def mmccli_config_edit():
     """打开 MCLI 配置文件。"""
     import subprocess
 
+    CONFIG_ROOT_DIR = useMcliContext.config_dir
+
     CONFIG_ROOT_DIR.mkdir(exist_ok=True, parents=True)
     config_file_path = CONFIG_ROOT_DIR / "mmccli.toml"
 
@@ -59,7 +62,7 @@ def mmccli_config_edit():
     )
 
     if not config_file_path.exists():
-        save_config_to_file("log_level", "INFO")
+        save_config_to_file("log_level", "INFO", config_file_path)
     try:
         subprocess.Popen([command, str(config_file_path)], **kwargs)
     except FileNotFoundError as e:
@@ -67,7 +70,10 @@ def mmccli_config_edit():
         err(e)
         raise typer.Exit(404)
     else:
-        info("已打开 MCLI 配置文件。")
+        info(
+            "已打开 MCLI 配置文件 > [italic][yellow][link=file://{path!s}]{path!s}[/]".format(path=config_file_path),
+            extra={"markup": True},
+        )
 
 
 @app.command(name="set")
@@ -80,25 +86,26 @@ def mmccli_config_set(
         err("{key} 不是合法的配置键名。".format(key=key))
         raise typer.Exit(400)
 
+    path = useMcliContext.config_dir / "mmccli.toml"
     inner_key = key.replace("-", "_")
     if inner_key in useMcliConfig.model_dump():
         success = False
         if value == "True":
-            save_config_to_file(inner_key, True)
+            save_config_to_file(inner_key, True, path)
             success = True
         elif value == "False":
-            save_config_to_file(inner_key, False)
+            save_config_to_file(inner_key, False, path)
             success = True
 
         if inner_key == "log_level":
             for level in McliConfig_LogLevel:
                 if level.value == value:
-                    save_config_to_file(inner_key, value)
+                    save_config_to_file(inner_key, value, path)
                     success = True
                     continue
 
         if not success:
-            save_config_to_file(inner_key, value)
+            save_config_to_file(inner_key, value, path)
         info("{key} 已设置。".format(key=key))
     else:
         err("{key} 不是合法的配置键名。".format(key=key))

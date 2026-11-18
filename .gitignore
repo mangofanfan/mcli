@@ -11,4 +11,5 @@ wheels/
 
 # minecraft about
 .mcli
+.mmccli
 .minecraft
