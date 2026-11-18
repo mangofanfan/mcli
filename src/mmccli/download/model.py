@@ -1,7 +1,6 @@
 # mmccli.download.model
 import re
 from pathlib import Path
-from typing import Any
 
 from pydantic import BaseModel
 

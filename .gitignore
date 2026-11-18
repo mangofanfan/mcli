@@ -5,6 +5,7 @@ build/
 dist/
 wheels/
 *.egg-info
+tests/.mmccli
 
 # Virtual environments
 .venv

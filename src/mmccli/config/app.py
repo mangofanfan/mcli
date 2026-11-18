@@ -37,6 +37,13 @@ def mmccli_config_list():
         table.add_row(key.replace("_", "-"), _render(value))
     console_stdout.print(table)
 
+    info(
+        "正在使用的 MCLI 配置文件 > [italic][yellow][link=file://{path!s}]{path!s}[/]".format(
+            path=useMcliContext.config_dir / "mmccli.toml",
+        ),
+        extra={"markup": True},
+    )
+
 
 @app.command(name="edit")
 def mmccli_config_edit():

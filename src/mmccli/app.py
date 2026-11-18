@@ -10,6 +10,8 @@ from mmccli.config.config_item import McliConfig_LogLevel
 from mmccli.log import err, info, useGlobalState, warn
 from mmccli.minecraft import app_minecraft
 
+__all__ = ["app"]
+
 app = typer.Typer(help="Minecraft Java Cli", name="MCLI")
 app.add_typer(app_minecraft)
 app.add_typer(app_cache)
@@ -18,9 +20,9 @@ app.add_typer(app_config)
 
 def _version_callback(value: bool):
     if value:
-        from mmccli import __version__
+        from importlib.metadata import version
 
-        print(f"MCLI-MMCCLI {__version__}")
+        print(f"MCLI-MMCCLI {version('mmccli')}")
         raise typer.Exit()
 
 
